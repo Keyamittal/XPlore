@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, User, Lock } from 'lucide-react';
+import { ArrowRight, User, Lock, Smile } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import mascotLogo from '../assets/new-logo.png';
 
 export default function Login() {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('AryanK'); 
   const [password, setPassword] = useState('hackathon2026');
   const [error, setError] = useState('');
@@ -13,16 +15,36 @@ export default function Login() {
   const { login } = useGame();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const toggleSignUp = () => {
+    setIsSignUp(!isSignUp);
+    setError('');
+    if (!isSignUp) {
+      setUsername('');
+      setPassword('');
+    } else {
+      setUsername('AryanK');
+      setPassword('hackathon2026');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    const url = isSignUp 
+      ? 'http://localhost:3000/api/auth/register' 
+      : 'http://localhost:3000/api/auth/login';
+      
+    const bodyPayload = isSignUp 
+      ? { username, password, fullName } 
+      : { username, password };
+
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify(bodyPayload)
       });
       const data = await res.json();
       
@@ -60,7 +82,9 @@ export default function Login() {
           </div>
           
           <div className="text-center mb-8">
-            <p className="text-sm text-slate-800 font-bold bg-pastel-yellow inline-block px-3 py-1 border-2 border-slate-800 shadow-[2px_2px_0px_#334155]">Sign in to play</p>
+            <p className="text-sm text-slate-800 font-bold bg-pastel-yellow inline-block px-3 py-1 border-2 border-slate-800 shadow-[2px_2px_0px_#334155]">
+              {isSignUp ? 'Create your adventurer ID' : 'Sign in to play'}
+            </p>
           </div>
 
           {error && (
@@ -69,7 +93,26 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="w-full space-y-5">
+          <form onSubmit={handleSubmit} className="w-full space-y-5">
+            {isSignUp && (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-800 ml-1 font-pixel text-[10px]">FULL NAME</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Smile className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <input 
+                    type="text" 
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-800 text-slate-800 rounded-md pl-10 pr-4 py-3 font-bold focus:outline-none focus:border-pastel-purple focus:ring-4 focus:ring-pastel-purple/30 transition-all placeholder:text-slate-500"
+                    placeholder="e.g. Keya Mittal"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-800 ml-1 font-pixel text-[10px]">USERNAME</label>
               <div className="relative">
@@ -81,7 +124,7 @@ export default function Login() {
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   className="w-full bg-slate-50 border-2 border-slate-800 text-slate-800 rounded-md pl-10 pr-4 py-3 font-bold focus:outline-none focus:border-pastel-purple focus:ring-4 focus:ring-pastel-purple/30 transition-all placeholder:text-slate-500"
-                  placeholder="Player ID"
+                  placeholder={isSignUp ? "Unique Player ID" : "Player ID"}
                   required
                 />
               </div>
@@ -109,16 +152,27 @@ export default function Login() {
               disabled={loading}
               className="w-full mt-6 py-4 bg-pastel-pink border-4 border-slate-800 text-slate-800 hover:bg-pastel-yellow font-pixel text-xs rounded shadow-[4px_4px_0px_#334155] active:translate-y-1 active:shadow-[0px_0px_0px_#334155] transition-all flex justify-center items-center gap-2 group disabled:opacity-70 disabled:cursor-wait"
             >
-              {loading ? 'STARTING...' : 'PRESS START'}
+              {loading ? (isSignUp ? 'REGISTERING...' : 'STARTING...') : (isSignUp ? 'CREATE ACCOUNT' : 'PRESS START')}
               {!loading && <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
 
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={toggleSignUp}
+              className="text-xs font-bold text-slate-800 hover:text-slate-600 font-pixel border-b-2 border-slate-800 transition-colors"
+            >
+              {isSignUp ? 'ALREADY REGISTERED? SIGN IN' : "DON'T HAVE AN ID? SIGN UP"}
+            </button>
+          </div>
+
           <p className="mt-8 text-[10px] text-slate-500 text-center font-pixel leading-relaxed">
-            BY SIGNING IN, YOU AGREE<br/>TO THE LEVEL UP PROTOCOL
+            BY SIGNING {isSignUp ? 'UP' : 'IN'}, YOU AGREE<br/>TO THE LEVEL UP PROTOCOL
           </p>
         </div>
       </div>
     </div>
   );
 }
+

@@ -27,20 +27,20 @@ export default function Sidebar() {
         </div>
 
         {/* EXP Bar */}
-        <div className="relative w-full h-4 bg-slate-100 rounded border-2 border-slate-200 overflow-hidden mb-1">
-          <div className="absolute top-0 left-0 h-full bg-exp-gradient" style={{ width: `${xpPercent}%` }}></div>
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-800 z-10">
+        <div className="relative w-full h-4 bg-slate-100 rounded border-2 border-slate-800 overflow-hidden mb-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]">
+          <div className="absolute top-0 left-0 h-full bg-exp-gradient min-w-[4px]" style={{ width: `${xpPercent}%` }}></div>
+          <div className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-slate-800 z-10 font-pixel select-none tracking-wider leading-none">
             EXP {currentUser.xp}/{currentUser.xpToNext}
           </div>
         </div>
 
         {/* Streak & Gold */}
         <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-2 text-sm font-bold text-orange-400">
-            <img alt="Streak Fire" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVlNEOVMOYrIweKDrbW6yQXs--k4gwYYxT8yaYaouJ0THYQtCC0HhihTrM2HF-kXSW-c1_EEYTurWeQYfA90j3SSyLs31LYokNay_34o9hMYPaXZSkKmpo9xntQvlaN9_cCGwKdheOiK9xTKF4RVYpVqHWp9lw7HacYRWPGNsQUm_hLpjKm74jRlS9C_T4AoJAabBLS0TupIGOKTQzQS3BPIk6NkoIkhaiyiVKGMKRK6_Xs50sFVIXRcD_tNh9JyW0_uz59E8DIl0" />
+          <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded shadow-sm text-orange-600 font-pixel text-[9px] font-bold transition-transform hover:scale-105 select-none">
+            <span className="text-xs select-none">🔥</span>
             <span>{currentUser.streak} DAYS</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shadow-sm text-amber-600 font-pixel text-[9px] font-bold">
+          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shadow-sm text-amber-600 font-pixel text-[9px] font-bold transition-transform hover:scale-105 select-none">
             <span className="text-xs select-none">🪙</span>
             <span>{gold}G</span>
           </div>

@@ -1,6 +1,7 @@
-import { Lock } from 'lucide-react';
+import { Lock, LogOut } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { badges, titles } from '../data/badges';
+import { playSound } from '../utils/audio';
 
 
 const rarityColors: Record<string, string> = {
@@ -29,10 +30,15 @@ const heatColors = [
 ];
 
 export default function Profile() {
-  const { user: currentUser } = useGame();
+  const { user: currentUser, logout } = useGame();
   const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
   const unlocked = badges.filter(b => b.unlocked);
   const locked = badges.filter(b => !b.unlocked);
+
+  const handleLogout = () => {
+    playSound('click');
+    logout();
+  };
 
   const stats = [
     { label: 'TOTAL XP', value: currentUser.totalXP.toLocaleString(), icon: '⚡', color: 'var(--color-accent)' },
@@ -44,7 +50,17 @@ export default function Profile() {
   return (
     <div className="flex flex-col gap-8 animate-[fade-in_0.3s_ease-out]">
       {/* Hero */}
-      <div className="panel-border-cyan p-6 flex flex-col md:flex-row gap-8 items-center bg-white/50 hover:bg-white/80 transition-colors">
+      <div className="panel-border-cyan p-6 flex flex-col md:flex-row gap-8 items-center bg-white/50 hover:bg-white/80 transition-colors relative">
+        {/* Logout Button */}
+        <button 
+          onClick={handleLogout}
+          onMouseEnter={() => playSound('hover')}
+          className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 border-2 border-red-500 hover:border-red-600 text-red-600 font-pixel text-[8px] font-bold rounded shadow-[2px_2px_0px_#ef4444] active:translate-y-0.5 active:shadow-[1px_1px_0px_#ef4444] transition-all cursor-pointer"
+        >
+          <LogOut size={10} />
+          LOG OUT
+        </button>
+
         <div className="flex flex-col items-center">
           <div className="w-24 h-24 bg-white border-2 border-pastel-pink rounded shadow-[0_0_10px_#ff00ff] flex items-center justify-center font-pixel text-3xl font-bold text-pastel-pink mb-2">
             {currentUser.initials}

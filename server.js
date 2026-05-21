@@ -70,6 +70,64 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
+// 1.2 Auth/Register
+app.post('/api/auth/register', (req, res) => {
+  const { username, password, fullName } = req.body;
+  if (!username || !password || !fullName) {
+    return res.status(400).json({ error: 'Missing fields. Username, password, and full name are required.' });
+  }
+
+  // Check for duplicate username
+  db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (row) return res.status(409).json({ error: 'Username already taken' });
+
+    // Generate fields
+    const id = `u_${Date.now()}`;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const d = new Date();
+    const joinDate = `${months[d.getMonth()]} ${d.getFullYear()}`;
+
+    // Compute initials
+    let initials = '';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    } else if (parts.length === 1 && parts[0].length > 0) {
+      initials = parts[0].substring(0, 2).toUpperCase();
+    } else {
+      initials = 'XX';
+    }
+
+    // Insert user
+    db.run(
+      `INSERT INTO users (id, username, password, full_name, initials, total_xp, level, streak, title, join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, username, password, fullName, initials, 0, 1, 1, 'NOVICE', joinDate],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+
+        res.status(201).json({
+          user: {
+            id,
+            username,
+            fullName,
+            initials,
+            xp: 0,
+            level: 1,
+            streak: 1,
+            title: 'NOVICE',
+            joinDate,
+            totalXP: 0,
+            xpToNext: 100
+          },
+          token: 'mock-jwt-token'
+        });
+      }
+    );
+  });
+});
+
+
 // 1.5 Auto-Sync Profile
 app.post('/api/user/sync', (req, res) => {
   const { userId } = req.body;

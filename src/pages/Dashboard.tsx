@@ -17,13 +17,13 @@ export default function Dashboard() {
   const [nextBossAction, setNextBossAction] = useState<'slash' | 'heavy' | 'roar' | 'stun'>('slash');
   const [playerDefending, setPlayerDefending] = useState(false);
   const [isBackpackOpen, setIsBackpackOpen] = useState(false);
-  
+
   // Fight-specific item buffs/states
   const [bossStunned, setBossStunned] = useState(false);
   const [shieldActive, setShieldActive] = useState(false);
   const [fightMightBonus, setFightMightBonus] = useState(0);
   const [guaranteedCrit, setGuaranteedCrit] = useState(false);
-  
+
   const [battleLogs, setBattleLogs] = useState<string[]>([]);
   const [battleFlashing, setBattleFlashing] = useState<'boss' | 'player' | null>(null);
   const [battleOutcome, setBattleOutcome] = useState<'victory' | 'defeat' | null>(null);
@@ -57,7 +57,7 @@ export default function Dashboard() {
   const handleAttack = () => {
     if (battleOutcome) return;
     playSound('click');
-    
+
     // Check for passive item bonuses & might elixir fight buffs
     const elixirMight = inventory.find(item => item.id === 'elixir_might');
     const hasMight = elixirMight && elixirMight.qty > 0;
@@ -65,7 +65,7 @@ export default function Dashboard() {
 
     const luckyCharm = inventory.find(item => item.id === 'lucky_charm');
     const hasLucky = luckyCharm && luckyCharm.qty > 0;
-    
+
     const isCrit = guaranteedCrit || (hasLucky && Math.random() < 0.3);
     if (guaranteedCrit) {
       setGuaranteedCrit(false); // consume guaranteed crit buff
@@ -83,12 +83,12 @@ export default function Dashboard() {
     const manaGain = 12;
     const newMana = Math.min(100, playerMana + manaGain);
     setPlayerMana(newMana);
-    
+
     let logMsg = `⚔️ Slash Strike! Dealt ${playerDamage} damage to the Boss! (+${manaGain} Mana)`;
     if (isCrit) {
       logMsg = `✨ CRITICAL SLASH! Dealt ${playerDamage} damage to the Boss! (+${manaGain} Mana)`;
     }
-    
+
     if (newBossHp <= 0) {
       setBattleOutcome('victory');
       playSound('success');
@@ -96,7 +96,7 @@ export default function Dashboard() {
         particleCount: 80,
         spread: 80,
         origin: { y: 0.6 },
-        colors: ['#FFB6C1', '#AEECEF', '#FFFACD', '#D8B4E2']
+        colors: ['#f8b7c1ff', '#AEECEF', '#FFFACD', '#D8B4E2']
       });
       addXpDirectly(50);
       setBattleLogs(prev => [logMsg, '🏆 VICTORY! You defeated the Boss Monster and earned +50 XP!', ...prev]);
@@ -122,7 +122,7 @@ export default function Dashboard() {
 
     const luckyCharm = inventory.find(item => item.id === 'lucky_charm');
     const hasLucky = luckyCharm && luckyCharm.qty > 0;
-    
+
     const isCrit = guaranteedCrit || (hasLucky && Math.random() < 0.3);
     if (guaranteedCrit) {
       setGuaranteedCrit(false);
@@ -143,7 +143,7 @@ export default function Dashboard() {
     if (isCrit) {
       logMsg = `✨ MAGICAL CRIT! Fireball exploded for ${playerDamage} damage! (-18 Mana)`;
     }
-    
+
     if (newBossHp <= 0) {
       setBattleOutcome('victory');
       playSound('success');
@@ -173,15 +173,15 @@ export default function Dashboard() {
 
     const logMsg = `🛡️ You guard and prepare for the Monster's next move. (+${manaGain} Mana)`;
     setBattleLogs(prev => [logMsg, ...prev]);
-    
+
     executeBossTurn(bossHp, playerHp, newMana, shieldActive, bossStunned, true);
   };
 
   const executeBossTurn = (
-    currentBossHp: number, 
-    currentPlayerHp: number, 
-    currentMana: number, 
-    isShieldActive: boolean, 
+    currentBossHp: number,
+    currentPlayerHp: number,
+    currentMana: number,
+    isShieldActive: boolean,
     isBossStunned: boolean,
     isDefendingNow: boolean = false
   ) => {
@@ -240,7 +240,7 @@ export default function Dashboard() {
 
       const newPlayerHp = Math.max(0, currentPlayerHp - bossDamage);
       setPlayerHp(newPlayerHp);
-      
+
       // Auto-revive / protect if player has a Task Shield in inventory to prevent defeat once!
       if (newPlayerHp <= 0) {
         const taskShieldItem = inventory.find(i => i.id === 'task_shield');
@@ -268,7 +268,7 @@ export default function Dashboard() {
         }, 1200);
         return;
       }
-      
+
       setBattleFlashing('player');
       setTimeout(() => setBattleFlashing(null), 150);
       setBattleLogs(prev => [...logs, ...prev]);
@@ -346,14 +346,14 @@ export default function Dashboard() {
   const handleComplete = async (id: string, amount: number, e: React.MouseEvent) => {
     e.preventDefault();
     await addXpDirectly(amount);
-    
+
     // Game features: Sound and Particle Effects
     playSound('success');
     confetti({
       particleCount: 50,
       spread: 60,
       origin: { y: 0.8 },
-      colors: ['#FFB6C1', '#AEECEF', '#FFFACD', '#D8B4E2']
+      colors: ['#f9b6c0ff', '#AEECEF', '#FFFACD', '#D8B4E2']
     });
 
     setPopups(p => ({ ...p, [id]: true }));
@@ -364,42 +364,67 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Top Bar: Player Status */}
-      <section className="panel-border-cyan p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex gap-2 mr-2">
-            <div className="pixel-heart"></div>
-            <div className="pixel-star"></div>
-          </div>
-          <h2 className="text-pastel-cyan font-bold text-lg md:text-xl tracking-wider mr-2 font-pixel">» PLAYER STATUS</h2>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 md:w-16 md:h-16 border border-pastel-cyan rounded bg-white overflow-hidden relative shrink-0">
-              <div className="absolute inset-0 border border-slate-200 transform rotate-12 scale-150 pointer-events-none"></div>
-              <div className="w-full h-full flex items-center justify-center font-pixel text-pastel-cyan text-sm md:text-xl bg-white">{currentUser.initials}</div>
+      {/* Top Bar: Player Status Card */}
+      <section className="panel-border-cyan p-5 flex flex-col gap-5 bg-white/50 hover:bg-white/80 transition-colors shadow-sm">
+
+        {/* Row 1: Header - Player Status */}
+        <div className="flex items-center justify-between border-b-2 border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex gap-1.5">
+              <div className="pixel-heart"></div>
+              <div className="pixel-star"></div>
             </div>
-            <div>
-              <div className="text-slate-800 font-bold tracking-wide font-pixel text-xs md:text-sm mt-1">{currentUser.username}</div>
-              <div className="text-slate-500 font-pixel text-[8px] md:text-xs mt-1 md:mt-2">{currentUser.title}</div>
-            </div>
+            <h2 className="text-pastel-cyan font-black text-xl md:text-2xl tracking-widest font-pixel">» PLAYER STATUS</h2>
           </div>
         </div>
-        
-        <div className="flex-1 flex items-center gap-4 w-full">
-          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-pastel-pink flex flex-col items-center justify-center shrink-0 shadow-sm bg-white">
-            <span className="text-slate-800 text-sm md:text-xl font-bold leading-none">{currentUser.level}</span>
-            <span className="text-pastel-pink text-[8px] md:text-xs font-bold leading-none mt-1">LVL</span>
-          </div>
-          <div className="flex-1 relative min-w-0">
-            <div className="flex justify-between text-[8px] md:text-xs text-slate-500 mb-1 px-1 font-pixel">
-              <span>{currentUser.xpToNext - currentUser.xp} TO NEXT LEVEL</span>
-              <span className="shrink-0">{currentUser.xp.toLocaleString()} / {currentUser.xpToNext.toLocaleString()}</span>
+
+        {/* Row 2: Content (Player details & Level Circle Badge / Progress Bar) */}
+        <div className="flex flex-col md:flex-row items-center md:items-stretch justify-between gap-6">
+
+          {/* Left Block: Avatar, Name, and Title Details */}
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            {/* Initials Avatar Box (Larger and highly visible!) */}
+            <div className="w-16 h-16 md:w-20 md:h-20 border-2 border-slate-800 rounded bg-white flex items-center justify-center font-pixel text-pastel-cyan text-lg md:text-2xl font-black shadow-[4px_4px_0px_theme('colors.pastel-cyan')] select-none shrink-0 transition-transform hover:scale-105">
+              {currentUser.initials}
             </div>
-            <div className="w-full h-5 md:h-6 bg-white rounded-full border border-slate-200 p-[2px] relative overflow-hidden">
-              <div className="h-full bg-pastel-pink rounded-full shadow-[0_0_10px_#ff00ff] relative transition-all duration-500" style={{ width: `${xpPercent}%` }}>
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white opacity-50 blur-[2px]"></div>
+            {/* Name/Title vertical details */}
+            <div className="flex flex-col gap-1.5">
+              <div className="text-slate-800 font-extrabold tracking-wide font-pixel text-sm md:text-xl transition-colors hover:text-pastel-cyan">
+                {currentUser.username}
+              </div>
+              <div className="text-slate-500 font-pixel text-[8px] md:text-xs bg-slate-100 border border-slate-200 px-2 py-0.5 rounded self-start font-bold uppercase tracking-wider">
+                {currentUser.title || 'NOVICE'}
               </div>
             </div>
           </div>
+
+          {/* Right Block: Circular Level Badge & XP bar stacked vertically on the right side */}
+          <div className="flex flex-row md:flex-col items-center md:items-end gap-4 md:gap-2 shrink-0 justify-end w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
+
+            {/* Circle Level Badge (Large and premium like requested) */}
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-slate-800 flex flex-col items-center justify-center shrink-0 shadow-[3px_3px_0px_theme('colors.pastel-pink')] bg-white select-none transition-transform hover:scale-105">
+              <span className="text-slate-800 text-base md:text-xl font-black leading-none">{currentUser.level}</span>
+              <span className="text-pastel-pink text-[8px] md:text-[9px] font-black leading-none mt-0.5 tracking-wider font-pixel">LVL</span>
+            </div>
+
+            {/* Small XP Progress Bar block underneath Level Badge */}
+            <div className="w-[140px] md:w-[160px] flex flex-col gap-1">
+              <div className="flex justify-between text-[7px] md:text-[8px] text-slate-500 font-pixel leading-none px-0.5">
+                <span className="font-extrabold text-slate-700">{currentUser.xpToNext - currentUser.xp} TO NEXT</span>
+                <span>{currentUser.xp}/{currentUser.xpToNext} XP</span>
+              </div>
+              <div className="w-full h-3 bg-slate-100 rounded-full border-2 border-slate-800 p-[1px] relative overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]">
+                <div
+                  className="h-full bg-pastel-pink rounded-full shadow-[0_0_6px_#ff00ff] relative transition-all duration-500 min-w-[2px]"
+                  style={{ width: `${xpPercent}%` }}
+                >
+                  <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-r from-transparent to-white opacity-40 blur-[1px]"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
@@ -412,16 +437,16 @@ export default function Dashboard() {
       {/* Grid Row 1: Quests */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <section className="panel-border-pink p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors">
-          <div 
+          <div
             onClick={() => { playSound('click'); navigate('/quests'); }}
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
             title="Go to Quest Board"
           >
-            <span className="font-pixel text-[9px] text-rose-600 font-bold tracking-wider group-hover/header:text-rose-700 transition-colors flex items-center gap-1">
+            <span className="font-pixel text-[9px] text-rose-900 font-bold tracking-wider group-hover/header:text-rose-700 transition-colors flex items-center gap-1">
               <span className="pixel-star scale-75 inline-block mr-1"></span>
               DAILY QUEST
             </span>
-            <button 
+            <button
               className="text-pastel-cyan hover:text-pastel-yellow transition-colors font-pixel text-[9px] flex items-center gap-1 font-bold bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded shadow-sm hover:border-pastel-cyan"
             >
               GO <span className="transform group-hover/header:translate-x-0.5 transition-transform font-bold">&gt;</span>
@@ -443,23 +468,23 @@ export default function Dashboard() {
         </section>
 
         <section className="panel-border-yellow p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors">
-          <div 
+          <div
             onClick={() => { playSound('click'); navigate('/backpack'); }}
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
             title="Go to Backpack Options"
           >
-            <span className="font-pixel text-[9px] text-amber-600 font-bold tracking-wider group-hover/header:text-amber-700 transition-colors flex items-center gap-1">
+            <span className="font-pixel text-[9px] text-amber-800 font-bold tracking-wider group-hover/header:text-amber-700 transition-colors flex items-center gap-1">
               <span className="pixel-star scale-75 inline-block mr-1"></span>
               MY BACKPACK
             </span>
-            <button 
+            <button
               className="text-pastel-cyan hover:text-pastel-yellow transition-colors font-pixel text-[9px] flex items-center gap-1 font-bold bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded shadow-sm hover:border-pastel-cyan"
             >
               GO <span className="transform group-hover/header:translate-x-0.5 transition-transform font-bold">&gt;</span>
             </button>
           </div>
           <div className="flex items-start gap-3">
-            <div 
+            <div
               onClick={() => { playSound('click'); navigate('/backpack'); }}
               className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0 cursor-pointer hover:bg-slate-50 transition-colors group/backpack shadow-sm"
               title="Open Backpack"
@@ -480,16 +505,16 @@ export default function Dashboard() {
         </section>
 
         <section className="panel-border-purple p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors">
-          <div 
+          <div
             onClick={() => { playSound('click'); navigate('/quests'); }}
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
             title="Go to Quest Board"
           >
-            <span className="font-pixel text-[9px] text-purple-600 font-bold tracking-wider group-hover/header:text-purple-700 transition-colors flex items-center gap-1">
+            <span className="font-pixel text-[9px] text-purple-900 font-bold tracking-wider group-hover/header:text-purple-700 transition-colors flex items-center gap-1">
               <span className="pixel-star scale-75 inline-block mr-1"></span>
               BOSS BATTLE
             </span>
-            <button 
+            <button
               className="text-pastel-cyan hover:text-pastel-yellow transition-colors font-pixel text-[9px] flex items-center gap-1 font-bold bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded shadow-sm hover:border-pastel-cyan"
             >
               GO <span className="transform group-hover/header:translate-x-0.5 transition-transform font-bold">&gt;</span>
@@ -512,7 +537,7 @@ export default function Dashboard() {
 
       {/* Main Lower Area - Horizontal Dashboard Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
-        
+
         {/* Expanded Badges Region */}
         <section className="panel-border-pink p-6 flex flex-col bg-white/50">
           <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-3">
@@ -520,7 +545,7 @@ export default function Dashboard() {
               <span className="pixel-star scale-75 inline-block"></span>
               BADGES VAULT
             </span>
-            <button 
+            <button
               onClick={() => { playSound('click'); navigate('/profile'); }}
               className="text-pastel-cyan hover:text-pastel-yellow transition-colors font-pixel text-[9px] flex items-center gap-1 font-bold bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded shadow-sm hover:border-pastel-cyan cursor-pointer"
             >
@@ -588,7 +613,7 @@ export default function Dashboard() {
               <span className="pixel-star scale-75 inline-block"></span>
               SKILLS MARKETPLACE
             </span>
-            <button 
+            <button
               onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
               className="text-pastel-cyan hover:text-pastel-yellow transition-colors font-pixel text-[9px] flex items-center gap-1 font-bold bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded shadow-sm hover:border-pastel-cyan cursor-pointer"
             >
@@ -596,8 +621,8 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            
-            <div 
+
+            <div
               onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
               className="flex items-center justify-between bg-white p-4 border-2 border-slate-800 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-cyan)] hover:-translate-y-1 transition-all group cursor-pointer"
             >
@@ -611,7 +636,7 @@ export default function Dashboard() {
                   <p className="text-xs text-slate-500 font-medium">In demand by 3 users</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); playSound('click'); navigate('/skill-exchange'); }}
                 className="px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] group-hover:border-pastel-cyan group-hover:text-pastel-cyan transition-colors"
               >
@@ -619,7 +644,7 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div 
+            <div
               onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
               className="flex items-center justify-between bg-white p-4 border-2 border-slate-800 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)] hover:-translate-y-1 transition-all group cursor-pointer"
             >
@@ -633,7 +658,7 @@ export default function Dashboard() {
                   <p className="text-xs text-slate-500 font-medium">Requested by you</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); playSound('click'); navigate('/skill-exchange'); }}
                 className="px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] group-hover:border-pastel-pink group-hover:text-pastel-pink transition-colors"
               >
@@ -649,12 +674,11 @@ export default function Dashboard() {
       {isBattleActive && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-[fade-in_0.2s_ease-out]">
           <div className="bg-slate-900/95 border-4 border-slate-700/80 rounded-2xl p-5 md:p-6 relative max-w-2xl w-full font-pixel shadow-[0_0_40px_rgba(168,85,247,0.35)] text-white flex flex-col justify-between overflow-hidden min-h-[580px] md:min-h-[520px] transition-all duration-300">
-            
+
             {/* Backpack Overlay Drawer */}
-            <div 
-              className={`absolute right-0 top-0 bottom-0 w-80 bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800/80 p-5 flex flex-col justify-between z-40 transition-transform duration-300 ease-in-out shadow-2xl rounded-r-2xl ${
-                isBackpackOpen ? 'translate-x-0' : 'translate-x-full'
-              }`}
+            <div
+              className={`absolute right-0 top-0 bottom-0 w-80 bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800/80 p-5 flex flex-col justify-between z-40 transition-transform duration-300 ease-in-out shadow-2xl rounded-r-2xl ${isBackpackOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
             >
               <div className="flex flex-col h-full overflow-hidden">
                 {/* Drawer Header */}
@@ -662,7 +686,7 @@ export default function Dashboard() {
                   <span className="text-xs text-amber-400 font-bold tracking-wider flex items-center gap-1.5 uppercase">
                     🎒 Battle Backpack
                   </span>
-                  <button 
+                  <button
                     onClick={() => { playSound('click'); setIsBackpackOpen(false); }}
                     className="text-slate-400 hover:text-white transition-colors cursor-pointer text-xs"
                   >
@@ -678,7 +702,7 @@ export default function Dashboard() {
                 <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 custom-scrollbar">
                   {inventory.map((item) => {
                     const isZero = item.qty === 0;
-                    
+
                     // Short, high-impact tactical labels instead of long clutter text
                     let battleLabel = '';
                     let battleBtnText = 'USE';
@@ -690,7 +714,7 @@ export default function Dashboard() {
                     else if (item.id === 'task_shield') { battleLabel = '🛡️ Block next boss hit'; battleBtnText = 'BARRIER'; }
 
                     return (
-                      <div 
+                      <div
                         key={item.id}
                         className={`p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 flex items-center gap-3 justify-between transition-all ${isZero ? 'opacity-35' : 'hover:bg-slate-900/90'}`}
                       >
@@ -706,11 +730,10 @@ export default function Dashboard() {
                         <button
                           disabled={isZero || !!battleOutcome}
                           onClick={() => handleUseItemInBattle(item.id)}
-                          className={`px-3 py-1.5 text-[8px] font-bold rounded-md border shrink-0 transition-all ${
-                            isZero
-                              ? 'bg-slate-950 text-slate-700 border-slate-900 cursor-not-allowed shadow-none'
-                              : 'bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 border-amber-500 text-slate-950 cursor-pointer shadow-md hover:scale-105 active:translate-y-0.5'
-                          }`}
+                          className={`px-3 py-1.5 text-[8px] font-bold rounded-md border shrink-0 transition-all ${isZero
+                            ? 'bg-slate-950 text-slate-700 border-slate-900 cursor-not-allowed shadow-none'
+                            : 'bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 border-amber-500 text-slate-950 cursor-pointer shadow-md hover:scale-105 active:translate-y-0.5'
+                            }`}
                         >
                           {battleBtnText}
                         </button>
@@ -736,14 +759,14 @@ export default function Dashboard() {
 
             {/* Main Battle Panel Container */}
             <div className="flex flex-col flex-1 justify-between h-full">
-              
+
               {/* Header */}
               <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-4 shrink-0">
                 <span className="text-pastel-purple font-bold tracking-wider text-xs md:text-sm flex items-center gap-2">
                   <span className="pixel-star animate-pulse"></span>
                   BOSS BATTLE ARENA
                 </span>
-                <button 
+                <button
                   onClick={handleRun}
                   className="text-slate-400 hover:text-white transition-colors cursor-pointer text-xs md:text-sm"
                 >
@@ -764,10 +787,10 @@ export default function Dashboard() {
 
               {/* Grid Panel: Boss vs Player */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 flex-1">
-                
+
                 {/* Boss Column */}
                 <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-3.5 flex flex-col items-center justify-between text-center relative overflow-hidden">
-                  
+
                   {/* Boss Intent Telegraph Badge */}
                   <div className="absolute top-2 left-2 right-2 flex justify-center z-20">
                     {nextBossAction === 'heavy' && (
@@ -795,10 +818,10 @@ export default function Dashboard() {
                   {/* Boss Image Container */}
                   <div className={`w-20 h-20 md:w-24 md:h-24 bg-slate-900/60 border ${battleFlashing === 'boss' ? 'border-rose-500 bg-rose-950/30 scale-95' : 'border-slate-800'} rounded-xl flex items-center justify-center p-2 relative overflow-hidden transition-all duration-150 mt-4`}>
                     <div className="absolute inset-0 bg-cyan-500/5 blur-[2px]"></div>
-                    <img 
-                      alt="Boss Monster" 
-                      className={`w-full h-full object-contain relative z-10 ${battleOutcome ? '' : 'animate-bounce'}`} 
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJqvHAG-77KicVUI6E5y9OaLNkH_KmJdNe55qpYx88_5Bj9UidrzNgUD0CzFxKy2FFiALRwoWNCCG9RkV_v_dfOJVIyGRVx22_Onm79syyy4NPBX7OloQvVyVXcSFYoxDXgy5TYkrkulfSxLFP0ReMg7Zm5oQFl5wc_Bl3xZfUSLwIRRdfb07fWmemFXoJ1UHPvh1EaJ60SkoJmzSlTIJdmqlutsGL6ckXI4nuRgosI8DNoXrYHpn8-MXomLHo6QXOMDGIske93lA" 
+                    <img
+                      alt="Boss Monster"
+                      className={`w-full h-full object-contain relative z-10 ${battleOutcome ? '' : 'animate-bounce'}`}
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJqvHAG-77KicVUI6E5y9OaLNkH_KmJdNe55qpYx88_5Bj9UidrzNgUD0CzFxKy2FFiALRwoWNCCG9RkV_v_dfOJVIyGRVx22_Onm79syyy4NPBX7OloQvVyVXcSFYoxDXgy5TYkrkulfSxLFP0ReMg7Zm5oQFl5wc_Bl3xZfUSLwIRRdfb07fWmemFXoJ1UHPvh1EaJ60SkoJmzSlTIJdmqlutsGL6ckXI4nuRgosI8DNoXrYHpn8-MXomLHo6QXOMDGIske93lA"
                     />
                   </div>
 
@@ -809,12 +832,12 @@ export default function Dashboard() {
                       <span>{bossHp} / 150 HP</span>
                     </div>
                     <div className="w-full h-3 bg-slate-950 border border-slate-800 p-0.5 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(6,182,212,0.4)]" 
-                        style={{ width: `${Math.max(0, (bossHp / 150) * 100)}%` }} 
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(6,182,212,0.4)]"
+                        style={{ width: `${Math.max(0, (bossHp / 150) * 100)}%` }}
                       />
                     </div>
-                    
+
                     {/* Strategy Hints based on telemetry */}
                     <div className="text-[7.5px] text-slate-400 mt-2 leading-tight select-none italic text-left px-1">
                       {nextBossAction === 'heavy' && "⚠️ Flame Breath charges a massive hit. Guarding is highly recommended!"}
@@ -827,7 +850,7 @@ export default function Dashboard() {
 
                 {/* Player Column */}
                 <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-3.5 flex flex-col justify-between text-left relative overflow-hidden">
-                  
+
                   {/* Player Credentials */}
                   <div className="flex items-center gap-3 mb-2.5">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-rose-500 to-indigo-500 border border-white/10 flex items-center justify-center font-bold text-white shadow-sm shrink-0">
@@ -848,9 +871,9 @@ export default function Dashboard() {
                         <span>{playerHp} / 100 HP</span>
                       </div>
                       <div className="w-full h-3 bg-slate-950 border border-slate-800 p-0.5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full bg-gradient-to-r from-rose-500 to-pink-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(244,63,94,0.4)] ${battleFlashing === 'player' ? 'bg-red-500 animate-pulse' : ''}`} 
-                          style={{ width: `${playerHp}%` }} 
+                        <div
+                          className={`h-full bg-gradient-to-r from-rose-500 to-pink-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(244,63,94,0.4)] ${battleFlashing === 'player' ? 'bg-red-500 animate-pulse' : ''}`}
+                          style={{ width: `${playerHp}%` }}
                         />
                       </div>
                     </div>
@@ -862,9 +885,9 @@ export default function Dashboard() {
                         <span>{playerMana} / 100 MP</span>
                       </div>
                       <div className="w-full h-3 bg-slate-950 border border-slate-800 p-0.5 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-indigo-500 to-violet-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(99,102,241,0.4)]" 
-                          style={{ width: `${playerMana}%` }} 
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-violet-400 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(99,102,241,0.4)]"
+                          style={{ width: `${playerMana}%` }}
                         />
                       </div>
                     </div>
@@ -890,7 +913,7 @@ export default function Dashboard() {
                   else if (log.includes('💀') || log.includes('GAME OVER') || log.includes('defeated')) textColor = 'text-rose-500 font-bold';
                   else if (log.includes('🌀') || log.includes('STUN') || log.includes('Stun')) textColor = 'text-purple-400';
                   else if (log.includes('🍀') || log.includes('Lucky')) textColor = 'text-yellow-400';
-                  
+
                   return (
                     <div key={index} className={`leading-tight flex items-start gap-1 ${textColor}`}>
                       <span>{log}</span>
@@ -907,14 +930,14 @@ export default function Dashboard() {
                   </div>
                   <div className="flex gap-3">
                     {battleOutcome === 'defeat' && (
-                      <button 
+                      <button
                         onClick={startBossBattle}
                         className="flex-1 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 border border-rose-600 rounded-lg text-white text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
                       >
                         TRY AGAIN
                       </button>
                     )}
-                    <button 
+                    <button
                       onClick={handleRun}
                       className="flex-1 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs font-bold hover:bg-slate-700 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
                     >
@@ -924,9 +947,9 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 shrink-0">
-                  
+
                   {/* Attack (Slash) Button */}
-                  <button 
+                  <button
                     onClick={handleAttack}
                     className="py-2 px-1 bg-gradient-to-b from-cyan-500 to-blue-600 border border-cyan-600 hover:border-cyan-400 text-white text-[10px] rounded-lg font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 leading-none"
                     title="Deal 12-18 base damage. Generates +12 MP."
@@ -937,14 +960,13 @@ export default function Dashboard() {
                   </button>
 
                   {/* Cast Spell Button */}
-                  <button 
+                  <button
                     disabled={playerMana < 18}
                     onClick={handleCastSpell}
-                    className={`py-2 px-1 rounded-lg font-bold shadow-md flex flex-col items-center justify-center gap-0.5 leading-none transition-all ${
-                      playerMana < 18 
-                        ? 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed opacity-50' 
-                        : 'bg-gradient-to-b from-indigo-500 to-violet-600 border border-indigo-600 hover:border-indigo-400 text-white hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
-                    }`}
+                    className={`py-2 px-1 rounded-lg font-bold shadow-md flex flex-col items-center justify-center gap-0.5 leading-none transition-all ${playerMana < 18
+                      ? 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed opacity-50'
+                      : 'bg-gradient-to-b from-indigo-500 to-violet-600 border border-indigo-600 hover:border-indigo-400 text-white hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
+                      }`}
                     title="Cast Fireball. Costs 18 MP. Deals 28-38 damage."
                   >
                     <span className="text-sm">🔥</span>
@@ -953,7 +975,7 @@ export default function Dashboard() {
                   </button>
 
                   {/* Defend Button */}
-                  <button 
+                  <button
                     onClick={handleDefend}
                     className="py-2 px-1 bg-gradient-to-b from-emerald-500 to-teal-600 border border-emerald-600 hover:border-emerald-400 text-white text-[10px] rounded-lg font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 leading-none"
                     title="Prepares a shield. Reduces incoming damage by 60% and blocks stuns. Generates +8 MP."
@@ -964,13 +986,12 @@ export default function Dashboard() {
                   </button>
 
                   {/* Backpack Items Drawer Toggle Button */}
-                  <button 
+                  <button
                     onClick={() => { playSound('click'); setIsBackpackOpen(!isBackpackOpen); }}
-                    className={`py-2 px-1 border rounded-lg font-bold shadow-md flex flex-col items-center justify-center gap-0.5 leading-none transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
-                      isBackpackOpen
-                        ? 'bg-amber-600 border-amber-500 text-white'
-                        : 'bg-gradient-to-b from-slate-800 to-slate-900 border-slate-700 hover:border-amber-400 text-amber-400'
-                    }`}
+                    className={`py-2 px-1 border rounded-lg font-bold shadow-md flex flex-col items-center justify-center gap-0.5 leading-none transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${isBackpackOpen
+                      ? 'bg-amber-600 border-amber-500 text-white'
+                      : 'bg-gradient-to-b from-slate-800 to-slate-900 border-slate-700 hover:border-amber-400 text-amber-400'
+                      }`}
                     title="Toggle item backpack drawer."
                   >
                     <span className="text-sm">🎒</span>
@@ -979,7 +1000,7 @@ export default function Dashboard() {
                   </button>
 
                   {/* Flee Button */}
-                  <button 
+                  <button
                     onClick={handleRun}
                     className="py-2 px-1 bg-gradient-to-b from-slate-700 to-slate-800 border border-slate-600 hover:border-slate-500 text-white text-[10px] rounded-lg font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 leading-none col-span-2 md:col-span-1"
                     title="Escape from the Boss Battle."
