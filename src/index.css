@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: theme('colors.light-bg');
+    color: #334155;
+  }
+}
+
+@layer components {
+  /* Aesthetic Background Elements */
+  .bg-grid {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+  }
+
+  /* Pastel panels with Pixel Aesthetics */
+  .panel-border-pink {
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.05),
+      4px 4px 0px theme('colors.pastel-pink');
+    border-radius: 0;
+    background-color: theme('colors.panel-bg');
+    position: relative;
+  }
+
+  .panel-border-cyan {
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.05),
+      4px 4px 0px theme('colors.pastel-cyan');
+    border-radius: 0;
+    background-color: theme('colors.panel-bg');
+    position: relative;
+  }
+
+  .panel-border-purple {
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.05),
+      4px 4px 0px theme('colors.pastel-purple');
+    border-radius: 0;
+    background-color: theme('colors.panel-bg');
+    position: relative;
+  }
+
+  /* Scanline - removed for pastel theme, keeping empty to avoid breaking class references if any */
+  
+  .panel-border-yellow {
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.05),
+      4px 4px 0px theme('colors.pastel-yellow');
+    border-radius: 0;
+    background-color: theme('colors.panel-bg');
+    position: relative;
+  }
+
+  .panel-border-green {
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.05),
+      4px 4px 0px theme('colors.pastel-green');
+    border-radius: 0;
+    background-color: theme('colors.panel-bg');
+    position: relative;
+  }
+
+  .scanline {
+    display: none;
+  }
+
+  /* CRT Overlay - removed */
+  .crt-overlay {
+    display: none;
+  }
+
+  /* Pixel Aesthetics */
+  .pixel-border {
+    position: relative;
+    border-radius: 0;
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.1),
+      4px 4px 0px rgba(0, 0, 0, 0.15);
+  }
+  
+  .pixel-border::before, .pixel-border::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  
+  /* Cute pixel decorations */
+  .pixel-heart {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: theme('colors.pastel-pink');
+    clip-path: polygon(10% 0, 40% 0, 50% 20%, 60% 0, 90% 0, 100% 20%, 100% 50%, 50% 100%, 0 50%, 0 20%);
+  }
+
+  .pixel-star {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: theme('colors.pastel-yellow');
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: theme('colors.light-bg'); 
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.pastel-pink'); 
+  border-radius: 4px;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+}
+
+.animate-float-up {
+  animation: floatUp 1.2s ease-out forwards;
+}
+
+@keyframes walkAcross {
+  0% { transform: translateX(-100px); }
+  100% { transform: translateX(110vw); }
+}
+
+@keyframes bobble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.pixel-cat-container {
+  animation: walkAcross 15s linear infinite;
+}
+
+.pixel-cat-bounce {
+  animation: bobble 0.5s steps(2, end) infinite;
+}
+
+/* Animated Background Classes */
+@keyframes gradientShift {
+  0% { transform: scale(1) translate(0, 0); }
+  33% { transform: scale(1.1) translate(30px, -50px); }
+  66% { transform: scale(0.9) translate(-20px, 20px); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+
+@keyframes gridScroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 50px 50px; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes floatMedium {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(-5deg); }
+}
+
+.animate-gradient {
+  animation: gradientShift 20s ease-in-out infinite;
+}
+
+.animate-grid {
+  animation: gridScroll 3s linear infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: floatMedium 4s ease-in-out infinite;
+}
