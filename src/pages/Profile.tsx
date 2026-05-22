@@ -29,10 +29,21 @@ const heatColors = [
   'rgba(196,93,106,0.9)',
 ];
 
+const customTitles = [
+  { name: 'Chaos Goblin', rarity: 'epic', description: 'Unlock this title by completing the Text "We need to talk" Mystery Mission.' },
+  { name: 'Main Character', rarity: 'epic', description: 'Unlock this title by completing the Sing Bollywood Out Loud Mystery Mission.' },
+  { name: 'Certified Menace', rarity: 'legendary', description: 'Unlock this title by completing the Embarrassing Photo Story Mystery Mission.' },
+  { name: 'Caffeine Addict', rarity: 'rare', description: 'Unlock this title by completing the Cinematic Coffee Reel Mystery Mission.' },
+  { name: 'Wholesome Hero', rarity: 'rare', description: 'Unlock this title by completing the 3 Online Compliments Mystery Mission.' },
+  { name: 'Dance Machine', rarity: 'rare', description: 'Unlock this title by completing the Dance to Trending Song Mystery Mission.' },
+  { name: 'Nature Guru', rarity: 'rare', description: 'Unlock this title by completing the Touch Grass Mystery Mission.' },
+  { name: 'Drama King', rarity: 'epic', description: 'Unlock this title by completing the Speak in Movie Dialogues Mystery Mission.' }
+];
+
 export default function Profile() {
-  const { user: currentUser, logout } = useGame();
+  const { user: currentUser, logout, unlockedTitles, activeTitle, equipTitle, unlockedMysteryBadges } = useGame();
   const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
-  const unlocked = badges.filter(b => b.unlocked);
+  const unlocked = [...badges.filter(b => b.unlocked), ...unlockedMysteryBadges];
   const locked = badges.filter(b => !b.unlocked);
 
   const handleLogout = () => {
@@ -135,24 +146,96 @@ export default function Profile() {
       </div>
 
       {/* Titles */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         <div className="border-b border-slate-800 pb-2">
-          <h3 className="font-pixel text-sm text-slate-800">TITLES</h3>
+          <h3 className="font-pixel text-sm text-slate-800">PLAYER TITLES</h3>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {titles.map(t => (
-            <div key={t.name} className={`p-3 rounded border flex justify-between items-center transition-colors ${
-              t.unlocked 
-                ? 'bg-pastel-cyan/10 border-pastel-cyan text-pastel-cyan hover:bg-pastel-cyan/20 cursor-pointer shadow-[0_0_8px_rgba(14,116,144,0.3)_inset]' 
-                : 'bg-white border-slate-800 text-slate-500'
-            }`}>
-              <div className="flex items-center gap-2">
-                {!t.unlocked && <Lock size={12} />}
-                <span className="font-bold text-sm tracking-wide">{t.unlocked ? t.name : '??????'}</span>
-              </div>
-              <span className="font-pixel text-[8px]">LV.{t.requiredLevel}</span>
-            </div>
-          ))}
+
+        {/* Level Up Titles */}
+        <div>
+          <h4 className="font-pixel text-[9px] text-slate-500 mb-3">◈ LEVEL ACHIEVEMENTS</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {titles.map(t => {
+              const isUnlocked = currentUser.level >= t.requiredLevel;
+              const isEquipped = activeTitle === t.name;
+              return (
+                <div
+                  key={t.name}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      playSound('click');
+                      equipTitle(t.name);
+                    }
+                  }}
+                  className={`p-3 rounded border flex flex-col justify-between transition-all relative select-none ${
+                    isUnlocked
+                      ? isEquipped
+                        ? 'border-pastel-pink bg-pastel-pink/15 text-slate-800 shadow-[0_0_10px_#ff00ff_inset] cursor-pointer'
+                        : 'bg-pastel-cyan/10 border-pastel-cyan text-slate-800 hover:bg-pastel-cyan/20 cursor-pointer hover:-translate-y-0.5'
+                      : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-xs md:text-sm tracking-wide">{isUnlocked ? t.name : '??????'}</span>
+                    {!isUnlocked && <Lock size={10} className="text-slate-400" />}
+                    {isUnlocked && isEquipped && (
+                      <span className="bg-pastel-pink text-white font-pixel text-[6px] px-1 rounded-sm shadow-[0_0_4px_#ff00ff] animate-pulse">
+                        EQUIPPED
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center mt-2 border-t border-slate-200/40 pt-1.5 font-pixel text-[7px] text-slate-500">
+                    <span>LEVEL UP</span>
+                    <span>LV.{t.requiredLevel}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mystery Titles */}
+        <div>
+          <h4 className="font-pixel text-[9px] text-pastel-pink mb-3">◈ MYSTERY MISSION REWARDS</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {customTitles.map(t => {
+              const isUnlocked = unlockedTitles.includes(t.name);
+              const isEquipped = activeTitle === t.name;
+              return (
+                <div
+                  key={t.name}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      playSound('click');
+                      equipTitle(t.name);
+                    }
+                  }}
+                  title={t.description}
+                  className={`p-3 rounded border flex flex-col justify-between transition-all relative select-none ${
+                    isUnlocked
+                      ? isEquipped
+                        ? 'border-pastel-purple bg-pastel-purple/15 text-slate-800 shadow-[0_0_10px_#b026ff_inset] cursor-pointer'
+                        : 'bg-pastel-purple/10 border-pastel-purple text-slate-800 hover:bg-pastel-purple/20 cursor-pointer hover:-translate-y-0.5'
+                      : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-xs md:text-sm tracking-wide">{isUnlocked ? t.name : '??????'}</span>
+                    {!isUnlocked && <Lock size={10} className="text-slate-400" />}
+                    {isUnlocked && isEquipped && (
+                      <span className="bg-pastel-purple text-white font-pixel text-[6px] px-1 rounded-sm shadow-[0_0_4px_#b026ff] animate-pulse">
+                        EQUIPPED
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center mt-2 border-t border-slate-200/40 pt-1.5 font-pixel text-[7px] text-slate-500">
+                    <span>{t.rarity.toUpperCase()}</span>
+                    <span>FUN QUEST</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

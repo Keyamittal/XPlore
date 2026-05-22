@@ -4,7 +4,7 @@ import { playSound } from '../utils/audio';
 import logoImg from '../assets/new-logo.png';
 
 export default function Sidebar() {
-  const { user: currentUser, gold } = useGame();
+  const { user: currentUser, gold, activeTitle } = useGame();
   const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
 
   return (
@@ -22,7 +22,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="text-slate-800 font-bold tracking-wide">{currentUser.username} - LV {currentUser.level}</div>
-            <div className="text-xs text-slate-500 font-pixel mt-1 text-[8px]">{currentUser?.title?.toUpperCase() || 'NOVICE'}</div>
+            <div className="text-xs text-slate-500 font-pixel mt-1 text-[8px]">{activeTitle?.toUpperCase() || 'NOVICE'}</div>
           </div>
         </div>
 

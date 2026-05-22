@@ -13,7 +13,7 @@ export default {
         'pastel-pink': '#F48FB1',
         'pastel-cyan': '#0E7490',
         'pastel-purple': '#CE93D8',
-        'pastel-yellow': '#FFD54F',
+        'pastel-yellow': '#FFF5D1',
         'pastel-green': '#81C784',
         'light-bg': '#FDFBF7',
         'panel-bg': '#FFFFFF',

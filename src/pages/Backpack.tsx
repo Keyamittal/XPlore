@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { playSound } from '../utils/audio';
+import { funChallenges } from '../data/funQuests';
 import confetti from 'canvas-confetti';
 
 export default function Backpack() {
-  const { gold, inventory, buyItem, useItem } = useGame();
-  const [activeTab, setActiveTab] = useState<'backpack' | 'shop'>('backpack');
+  const { gold, inventory, buyItem, useItem, unlockedCollectibles } = useGame();
+  const [activeTab, setActiveTab] = useState<'backpack' | 'shop' | 'collectibles'>('backpack');
   const [merchantDialogue, setMerchantDialogue] = useState<string>(
     "Welcome, traveler! Spend your hard-earned gold coins on items to aid your journey."
   );
@@ -126,7 +127,11 @@ export default function Backpack() {
 
         <div className="flex-1 text-center md:text-left z-10">
           <span className="text-pastel-cyan font-bold tracking-wider uppercase block mb-1">» Merchant Alistair says:</span>
-          <p className="text-slate-300 leading-relaxed font-medium select-text">{merchantDialogue}</p>
+          <p className="text-slate-300 leading-relaxed font-medium select-text">
+            {activeTab === 'collectibles' 
+              ? "Ho ho! Marvelous! You are showcasing your legendary Rare Collectibles! These are only earned by accomplishing secret Mystery Missions. They represent your real-world bravery!"
+              : merchantDialogue}
+          </p>
         </div>
       </section>
 
@@ -138,10 +143,10 @@ export default function Backpack() {
       )}
 
       {/* Tabs Layout */}
-      <div className="flex border-b-4 border-slate-800 mb-2">
+      <div className="flex border-b-4 border-slate-800 mb-2 overflow-x-auto">
         <button
           onClick={() => { playSound('click'); setActiveTab('backpack'); }}
-          className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none ${
+          className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
             activeTab === 'backpack'
               ? 'bg-pastel-pink text-slate-800 border-b-4 border-b-pastel-pink translate-y-[4px]'
               : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
@@ -151,13 +156,23 @@ export default function Backpack() {
         </button>
         <button
           onClick={() => { playSound('click'); setActiveTab('shop'); }}
-          className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none ${
+          className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
             activeTab === 'shop'
               ? 'bg-pastel-yellow text-slate-800 border-b-4 border-b-pastel-yellow translate-y-[4px]'
               : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
           }`}
         >
           MERCHANT SHOP
+        </button>
+        <button
+          onClick={() => { playSound('click'); setActiveTab('collectibles'); }}
+          className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
+            activeTab === 'collectibles'
+              ? 'bg-pastel-purple text-white border-b-4 border-b-pastel-purple translate-y-[4px]'
+              : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
+          }`}
+        >
+          🏆 RARE COLLECTIBLES ({unlockedCollectibles?.length || 0}/8)
         </button>
       </div>
 
@@ -261,6 +276,95 @@ export default function Backpack() {
               </section>
             );
           })}
+        </div>
+      )}
+
+      {/* Collectibles Panel */}
+      {activeTab === 'collectibles' && (
+        <div className="flex flex-col gap-6">
+          <div className="bg-pastel-purple/10 border-2 border-pastel-purple/50 p-4 rounded-lg text-slate-700 text-sm leading-relaxed">
+            <span className="font-bold text-pastel-purple font-pixel text-[10px] block mb-1">👑 THE TROPHY CABINET</span>
+            Earn rare, dynamic collectibles by completing the high-risk, high-fun <strong className="text-pastel-purple">Mystery Missions (Daily Fun Quests)</strong>. Equip your unlocked badges in the Profile and show off your real-life feats!
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {funChallenges.map((challenge) => {
+              const collectible = challenge.unlockedCollectible;
+              if (!collectible) return null;
+
+              // Check if unlocked
+              const unlockedRecord = unlockedCollectibles?.find((c: any) => c.id === collectible.id);
+              const isUnlocked = !!unlockedRecord;
+
+              return (
+                <section
+                  key={collectible.id}
+                  className={`panel-border-purple p-5 bg-white relative flex flex-col justify-between items-center text-center transition-all ${
+                    isUnlocked
+                      ? 'hover:-translate-y-1 hover:shadow-lg shadow-[0_4px_20px_rgba(206,147,216,0.15)] bg-gradient-to-b from-white to-purple-50/20'
+                      : 'opacity-65 saturate-50'
+                  }`}
+                >
+                  {/* Status Banner */}
+                  <div className="absolute top-3 right-3">
+                    {isUnlocked ? (
+                      <span className="font-pixel text-[8px] bg-emerald-500 text-white px-2 py-0.5 rounded shadow-sm font-bold uppercase animate-pulse">
+                        UNLOCKED
+                      </span>
+                    ) : (
+                      <span className="font-pixel text-[8px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded shadow-sm font-bold uppercase">
+                        LOCKED
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Trophy Icon */}
+                  <div className="my-4 relative">
+                    <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center text-5xl select-none shadow-md ${
+                      isUnlocked 
+                        ? 'bg-gradient-to-tr from-amber-100 to-yellow-50 border-yellow-400 animate-[bounce_3s_infinite_ease-in-out]' 
+                        : 'bg-slate-100 border-slate-300'
+                    }`}>
+                      {isUnlocked ? collectible.icon : '🔒'}
+                    </div>
+                    {isUnlocked && (
+                      <div className="absolute -bottom-1 -right-1 text-base bg-white border border-slate-300 rounded-full w-6 h-6 flex items-center justify-center shadow-inner">
+                        ⭐
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="w-full flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-base tracking-wide mt-2">
+                        {collectible.name}
+                      </h3>
+                      
+                      <p className="text-slate-500 text-[11px] leading-relaxed mt-2 px-1">
+                        {isUnlocked 
+                          ? collectible.description 
+                          : `Unlock this rare artifact of prestige by taking on challenges in the real world.`
+                        }
+                      </p>
+                    </div>
+
+                    <div className="border-t border-slate-100/80 mt-4 pt-3 w-full">
+                      {isUnlocked ? (
+                        <div className="text-[10px] text-emerald-600 font-pixel">
+                          Unlocked: {unlockedRecord.date || 'Today'}
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-pastel-purple font-medium bg-purple-50 rounded py-1 px-1.5 border border-purple-100/40">
+                          Quest: "{challenge.title}"
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { initialQuests } from '../data/quests';
 import type { Quest } from '../data/quests';
+import { funChallenges } from '../data/funQuests';
+import type { FunChallenge } from '../data/funQuests';
 
 export interface InventoryItem {
   id: string;
@@ -24,6 +26,22 @@ interface GameState {
   buyItem: (itemId: string) => boolean;
   useItem: (itemId: string) => boolean;
   addGoldDirectly: (amount: number) => void;
+  
+  // Mystery Mission / Fun Quests addition
+  mysteryMission: FunChallenge | null;
+  mysteryMissionState: 'locked' | 'unlocked' | 'accepted' | 'completed';
+  mysteryMissionSkips: number;
+  unlockedTitles: string[];
+  unlockedCollectibles: any[];
+  unlockedMysteryBadges: any[];
+  activeTitle: string;
+  equipTitle: (title: string) => void;
+  unlockMysteryMission: () => void;
+  acceptMysteryMission: () => void;
+  completeMysteryMission: () => Promise<void>;
+  shuffleMysteryMission: () => Promise<void>;
+  skipMysteryMission: () => void;
+  cheatCompleteAllQuests: () => void;
 }
 
 const GameContext = createContext<GameState | undefined>(undefined);
@@ -31,6 +49,15 @@ const GameContext = createContext<GameState | undefined>(undefined);
 export function GameProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
+
+  // Mystery Mission States
+  const [mysteryMission, setMysteryMission] = useState<FunChallenge | null>(null);
+  const [mysteryMissionState, setMysteryMissionState] = useState<'locked' | 'unlocked' | 'accepted' | 'completed'>('locked');
+  const [mysteryMissionSkips, setMysteryMissionSkips] = useState<number>(1);
+  const [unlockedTitles, setUnlockedTitles] = useState<string[]>(['NOVICE']);
+  const [unlockedCollectibles, setUnlockedCollectibles] = useState<any[]>([]);
+  const [unlockedMysteryBadges, setUnlockedMysteryBadges] = useState<any[]>([]);
+  const [activeTitle, setActiveTitle] = useState<string>('NOVICE');
 
   // Backpack & Resources states
   const [gold, setGold] = useState<number>(150);
@@ -88,6 +115,59 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setInventory(defaultInv);
         localStorage.setItem(`xplore_inventory_${user.id}`, JSON.stringify(defaultInv));
       }
+
+      // Load Mystery Mission and customized user titles/collectibles
+      const savedTitles = localStorage.getItem(`xplore_unlocked_titles_${user.id}`);
+      if (savedTitles) {
+        setUnlockedTitles(JSON.parse(savedTitles));
+      } else {
+        setUnlockedTitles(['NOVICE']);
+        localStorage.setItem(`xplore_unlocked_titles_${user.id}`, JSON.stringify(['NOVICE']));
+      }
+
+      const savedActiveTitle = localStorage.getItem(`xplore_active_title_${user.id}`);
+      if (savedActiveTitle) {
+        setActiveTitle(savedActiveTitle);
+      } else {
+        setActiveTitle(user.title || 'NOVICE');
+      }
+
+      const savedCollectibles = localStorage.getItem(`xplore_collectibles_${user.id}`);
+      if (savedCollectibles) {
+        setUnlockedCollectibles(JSON.parse(savedCollectibles));
+      } else {
+        setUnlockedCollectibles([]);
+        localStorage.setItem(`xplore_collectibles_${user.id}`, JSON.stringify([]));
+      }
+
+      const savedBadges = localStorage.getItem(`xplore_mystery_badges_${user.id}`);
+      if (savedBadges) {
+        setUnlockedMysteryBadges(JSON.parse(savedBadges));
+      } else {
+        setUnlockedMysteryBadges([]);
+        localStorage.setItem(`xplore_mystery_badges_${user.id}`, JSON.stringify([]));
+      }
+
+      const savedMission = localStorage.getItem(`xplore_mystery_mission_${user.id}`);
+      if (savedMission) {
+        setMysteryMission(JSON.parse(savedMission));
+      } else {
+        setMysteryMission(null);
+      }
+
+      const savedMissionState = localStorage.getItem(`xplore_mystery_mission_state_${user.id}`);
+      if (savedMissionState) {
+        setMysteryMissionState(savedMissionState as any);
+      } else {
+        setMysteryMissionState('locked');
+      }
+
+      const savedSkips = localStorage.getItem(`xplore_mystery_skips_${user.id}`);
+      if (savedSkips) {
+        setMysteryMissionSkips(Number(savedSkips));
+      } else {
+        setMysteryMissionSkips(1);
+      }
     }
   }, [user]);
 
@@ -106,8 +186,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       .then(res => res.json())
       .then(data => {
         if (data.user) {
-           setUser(data.user);
-           localStorage.setItem('xplore_user', JSON.stringify(data.user));
+           const savedActiveTitle = localStorage.getItem(`xplore_active_title_${parsed.id}`);
+           const syncedUser = savedActiveTitle ? { ...data.user, title: savedActiveTitle } : data.user;
+           setUser(syncedUser);
+           localStorage.setItem('xplore_user', JSON.stringify(syncedUser));
         }
       })
       .catch(err => console.error("Auto-sync failed:", err));
@@ -203,12 +285,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
         
         if (data.success) {
           // 2. Update Global User State
+          const savedActiveTitle = localStorage.getItem(`xplore_active_title_${user.id}`);
           const updatedUser = { 
             ...user, 
             xp: data.newXp, 
             totalXP: data.totalXP,
             level: data.newLevel, 
-            title: data.newTitle,
+            title: savedActiveTitle || data.newTitle,
             xpToNext: data.xpToNext
           };
           setUser(updatedUser);
@@ -241,12 +324,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       
       if (data.success) {
+        const savedActiveTitle = localStorage.getItem(`xplore_active_title_${user.id}`);
         const updatedUser = { 
           ...user, 
           xp: data.newXp, 
           totalXP: data.totalXP,
           level: data.newLevel, 
-          title: data.newTitle,
+          title: savedActiveTitle || data.newTitle,
           xpToNext: data.xpToNext
         };
         setUser(updatedUser);
@@ -257,8 +341,134 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Auto-unlock listener for completing all daily tasks
+  useEffect(() => {
+    if (user && quests.length > 0 && quests.every(q => q.completed)) {
+      if (mysteryMissionState === 'locked') {
+        const randChallenge = funChallenges[Math.floor(Math.random() * funChallenges.length)];
+        setMysteryMission(randChallenge);
+        setMysteryMissionState('unlocked');
+        localStorage.setItem(`xplore_mystery_mission_${user.id}`, JSON.stringify(randChallenge));
+        localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'unlocked');
+      }
+    }
+  }, [quests, user, mysteryMissionState]);
+
+  const equipTitle = (title: string) => {
+    if (!user) return;
+    setActiveTitle(title);
+    localStorage.setItem(`xplore_active_title_${user.id}`, title);
+    
+    const updatedUser = { ...user, title };
+    setUser(updatedUser);
+    localStorage.setItem('xplore_user', JSON.stringify(updatedUser));
+  };
+
+  const unlockMysteryMission = () => {
+    if (!user) return;
+    const randChallenge = funChallenges[Math.floor(Math.random() * funChallenges.length)];
+    setMysteryMission(randChallenge);
+    setMysteryMissionState('unlocked');
+    localStorage.setItem(`xplore_mystery_mission_${user.id}`, JSON.stringify(randChallenge));
+    localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'unlocked');
+  };
+
+  const acceptMysteryMission = () => {
+    if (!user) return;
+    setMysteryMissionState('accepted');
+    localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'accepted');
+  };
+
+  const completeMysteryMission = async () => {
+    if (!user || !mysteryMission) return;
+    
+    setMysteryMissionState('completed');
+    localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'completed');
+
+    // Add XP reward
+    await addXpDirectly(mysteryMission.xpReward);
+
+    // Unlocks:
+    // 1. Title reward
+    if (mysteryMission.unlockedTitle) {
+      setUnlockedTitles(prev => {
+        if (!prev.includes(mysteryMission.unlockedTitle!)) {
+          const updated = [...prev, mysteryMission.unlockedTitle!];
+          localStorage.setItem(`xplore_unlocked_titles_${user.id}`, JSON.stringify(updated));
+          return updated;
+        }
+        return prev;
+      });
+    }
+
+    // 2. Badge reward
+    if (mysteryMission.unlockedBadge) {
+      setUnlockedMysteryBadges(prev => {
+        if (!prev.some(b => b.id === mysteryMission.unlockedBadge!.id)) {
+          const updated = [...prev, { ...mysteryMission.unlockedBadge, date: new Date().toLocaleDateString() }];
+          localStorage.setItem(`xplore_mystery_badges_${user.id}`, JSON.stringify(updated));
+          return updated;
+        }
+        return prev;
+      });
+    }
+
+    // 3. Collectible reward
+    if (mysteryMission.unlockedCollectible) {
+      setUnlockedCollectibles(prev => {
+        if (!prev.some(c => c.id === mysteryMission.unlockedCollectible!.id)) {
+          const updated = [...prev, { ...mysteryMission.unlockedCollectible, date: new Date().toLocaleDateString() }];
+          localStorage.setItem(`xplore_collectibles_${user.id}`, JSON.stringify(updated));
+          return updated;
+        }
+        return prev;
+      });
+    }
+  };
+
+  const shuffleMysteryMission = async () => {
+    if (!user) return;
+    
+    // Deduct 10 XP points
+    await addXpDirectly(-10);
+
+    // Choose another challenge randomly
+    const currentId = mysteryMission?.id;
+    const available = funChallenges.filter(c => c.id !== currentId);
+    const randChallenge = available[Math.floor(Math.random() * available.length)];
+    
+    setMysteryMission(randChallenge);
+    setMysteryMissionState('unlocked');
+    
+    localStorage.setItem(`xplore_mystery_mission_${user.id}`, JSON.stringify(randChallenge));
+    localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'unlocked');
+  };
+
+  const skipMysteryMission = () => {
+    if (!user || mysteryMissionSkips <= 0) return;
+    
+    setMysteryMissionSkips(0);
+    localStorage.setItem(`xplore_mystery_skips_${user.id}`, '0');
+
+    // Shuffle for free
+    const currentId = mysteryMission?.id;
+    const available = funChallenges.filter(c => c.id !== currentId);
+    const randChallenge = available[Math.floor(Math.random() * available.length)];
+    
+    setMysteryMission(randChallenge);
+    localStorage.setItem(`xplore_mystery_mission_${user.id}`, JSON.stringify(randChallenge));
+  };
+
+  const cheatCompleteAllQuests = () => {
+    setQuests(prev => prev.map(q => ({ ...q, completed: true })));
+  };
+
   return (
-    <GameContext.Provider value={{ user, quests, gold, inventory, login, logout, completeQuest, addXpDirectly, buyItem, useItem, addGoldDirectly }}>
+    <GameContext.Provider value={{
+      user, quests, gold, inventory, login, logout, completeQuest, addXpDirectly, buyItem, useItem, addGoldDirectly,
+      mysteryMission, mysteryMissionState, mysteryMissionSkips, unlockedTitles, unlockedCollectibles, unlockedMysteryBadges, activeTitle,
+      equipTitle, unlockMysteryMission, acceptMysteryMission, completeMysteryMission, shuffleMysteryMission, skipMysteryMission, cheatCompleteAllQuests
+    }}>
       {children}
     </GameContext.Provider>
   );

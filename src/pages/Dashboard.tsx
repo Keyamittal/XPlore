@@ -1,13 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/audio';
 
 export default function Dashboard() {
-  const { user: currentUser, addXpDirectly, inventory, useItem } = useGame();
+  const {
+    user: currentUser,
+    addXpDirectly,
+    inventory,
+    useItem,
+    quests,
+    mysteryMission,
+    mysteryMissionState,
+    mysteryMissionSkips,
+    acceptMysteryMission,
+    completeMysteryMission,
+    shuffleMysteryMission,
+    skipMysteryMission,
+    cheatCompleteAllQuests
+  } = useGame();
   const navigate = useNavigate();
-  const [popups, setPopups] = useState<Record<string, boolean>>({});
+  
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [hasShownUnlockForState, setHasShownUnlockForState] = useState<string | null>(null);
+
+  // Trigger Unlock Modal when transition to unlocked state happens
+  useEffect(() => {
+    if (mysteryMissionState === 'unlocked' && hasShownUnlockForState !== 'unlocked') {
+      playSound('success');
+      setShowUnlockModal(true);
+      setHasShownUnlockForState('unlocked');
+      // Fire confetti for unlocking
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        colors: ['#CE93D8', '#B07EEC', '#ff00ff'],
+        origin: { y: 0.4 }
+      });
+    } else if (mysteryMissionState !== 'unlocked') {
+      // Reset tracker so it can trigger again next time
+      setHasShownUnlockForState(null);
+    }
+  }, [mysteryMissionState, hasShownUnlockForState]);
+
+  const handleCompleteMysteryMission = async () => {
+    playSound('success');
+    // Launch a massive confetti blast
+    confetti({
+      particleCount: 150,
+      spread: 100,
+      origin: { y: 0.5 },
+      colors: ['#FFD54F', '#FFC107', '#E0A96D', '#B07EEC', '#FF85A2']
+    });
+    
+    // Call Context's complete function
+    await completeMysteryMission();
+    
+    // Show Rewards Modal
+    setShowRewardsModal(true);
+  };
+
 
   // Boss Battle RPG game states
   const [isBattleActive, setIsBattleActive] = useState(false);
@@ -343,23 +397,6 @@ export default function Dashboard() {
     setIsBattleActive(false);
   };
 
-  const handleComplete = async (id: string, amount: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    await addXpDirectly(amount);
-
-    // Game features: Sound and Particle Effects
-    playSound('success');
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.8 },
-      colors: ['#f9b6c0ff', '#AEECEF', '#FFFACD', '#D8B4E2']
-    });
-
-    setPopups(p => ({ ...p, [id]: true }));
-    setTimeout(() => setPopups(p => ({ ...p, [id]: false })), 1500);
-  };
-
   const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
 
   return (
@@ -436,38 +473,169 @@ export default function Dashboard() {
 
       {/* Grid Row 1: Quests */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <section className="panel-border-pink p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors">
-          <div
-            onClick={() => { playSound('click'); navigate('/quests'); }}
-            className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
-            title="Go to Quest Board"
-          >
-            <span className="font-pixel text-[9px] text-rose-900 font-bold tracking-wider group-hover/header:text-rose-700 transition-colors flex items-center gap-1">
+        <section className={`p-4 relative overflow-hidden transition-all flex flex-col justify-between bg-white hover:bg-slate-50/50 transition-colors ${
+          mysteryMissionState === 'locked'
+            ? 'panel-border-pink'
+            : mysteryMissionState === 'unlocked'
+            ? 'panel-border-purple'
+            : mysteryMissionState === 'accepted'
+            ? 'panel-border-cyan'
+            : 'panel-border-lightblue'
+        }`}>
+          {/* Header */}
+          <div className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
+            <span className="font-pixel text-[9px] font-bold tracking-wider flex items-center gap-1">
               <span className="pixel-star scale-75 inline-block mr-1"></span>
-              DAILY QUEST
+              {mysteryMissionState === 'locked' && <span className="text-rose-900 font-extrabold">MYSTERY MISSION (LOCKED)</span>}
+              {mysteryMissionState === 'unlocked' && <span className="text-purple-900 font-extrabold">MYSTERY MISSION</span>}
+              {mysteryMissionState === 'accepted' && <span className="text-cyan-900 font-extrabold">ACTIVE MYSTERY MISSION</span>}
+              {mysteryMissionState === 'completed' && <span className="text-[#800000] font-pixel font-bold">MYSTERY QUEST CONQUERED!</span>}
             </span>
             <button
+              onClick={() => { playSound('click'); navigate('/quests'); }}
               className="text-pastel-cyan hover:text-pastel-yellow transition-colors font-pixel text-[9px] flex items-center gap-1 font-bold bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded shadow-sm hover:border-pastel-cyan"
             >
-              GO <span className="transform group-hover/header:translate-x-0.5 transition-transform font-bold">&gt;</span>
+              GO <span className="transform font-bold">&gt;</span>
             </button>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0">
-              <img alt="Feather" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqq1nIvPs6yny7yfTtf9E003jusn2NKvpq0WE9VVVzOPF7uTIE79FFq24hs_UbtlPuJ4GX2WXA1StdNTTLhuPQtjQis83XMzJ8HIiBD2YoVy1R24h_aBYDSXD9Y35JAt_hGqGYaFvPpXJB0I1_1iOKIqrpRYuhGzZGIVF5AobdA14ONHWAkFcGOrUizGoyGjDTnlYcuhRlifthxrs76iOneg5XFJ23cnTGhxU4BkceIXLj29ayMEdMQm9eg8UZ7mWTfwcAuHnX29s" />
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Complete short daily challenges to build consistent habits and earn quick XP before the 24-hour reset!</p>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-slate-800">3/5 Complete</p>
-                <button onClick={(e) => handleComplete('dq', 5, e)} className="px-3 py-1 bg-pastel-cyan pixel-border text-slate-800 text-xs font-pixel hover:bg-pastel-yellow ml-2 transition-colors">DONE</button>
+
+          {/* Body content based on state */}
+          {mysteryMissionState === 'locked' && (
+            <div className="flex items-start gap-3 flex-1 w-full">
+              <div className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0 text-xl shadow-sm select-none">
+                🔒
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
+                <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
+                  Finish <strong className="text-slate-800">all 12 daily tasks</strong> on the Quest Board to unlock your surprise Daily Fun Quest!
+                </p>
+                <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-800 leading-none">
+                      {quests.filter(q => q.completed).length}/12 Complete
+                    </span>
+                    <span
+                      onClick={() => { playSound('success'); cheatCompleteAllQuests(); }}
+                      className="text-[7px] text-purple-600 font-pixel hover:text-pastel-pink cursor-pointer underline leading-none mt-1"
+                    >
+                      DEV: Complete All
+                    </span>
+                  </div>
+                  <button className="px-3 py-2 bg-slate-100 border-2 border-slate-300 text-slate-400 text-xs font-pixel font-bold cursor-not-allowed select-none uppercase">
+                    LOCKED
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          {popups['dq'] && <div className="absolute top-2 right-2 text-pastel-cyan font-bold font-pixel text-lg animate-float-up drop-shadow-md">+5XP</div>}
-        </section>
+          )}
 
-        <section className="panel-border-yellow p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors">
+          {mysteryMissionState === 'unlocked' && mysteryMission && (
+            <div className="flex items-start gap-3 flex-1 w-full">
+              <div className="w-12 h-12 bg-white border border-pastel-purple rounded flex items-center justify-center shrink-0 text-2xl shadow-sm select-none animate-[bounce_3s_infinite_ease-in-out]">
+                {mysteryMission.icon}
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
+                <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
+                  Spontaneous quest ready! Category: <strong className="text-purple-800">{mysteryMission.category}</strong>. Complete to claim titles and trophies.
+                </p>
+                <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+                  <div className="flex gap-1.5 items-center">
+                    <button
+                      onClick={() => { playSound('click'); shuffleMysteryMission(); }}
+                      className="text-[8px] font-pixel text-slate-500 hover:text-purple-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm"
+                      title="Shuffle challenge (costs 10 XP)"
+                    >
+                      SHUFFLE (-10XP)
+                    </button>
+                    <button
+                      disabled={mysteryMissionSkips <= 0}
+                      onClick={() => { playSound('click'); skipMysteryMission(); }}
+                      className="text-[8px] font-pixel text-slate-500 hover:text-cyan-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Skip once per day"
+                    >
+                      SKIP ({mysteryMissionSkips}/1)
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => { playSound('click'); acceptMysteryMission(); }}
+                    className="px-3 py-2 bg-pastel-pink pixel-border text-slate-800 text-xs font-pixel hover:bg-pastel-yellow transition-colors font-bold uppercase"
+                  >
+                    ACCEPT
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mysteryMissionState === 'accepted' && mysteryMission && (
+            <div className="flex items-start gap-3 flex-1 w-full">
+              <div className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0 text-2xl shadow-sm select-none animate-pulse">
+                {mysteryMission.icon}
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
+                <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
+                  Active Challenge: <strong className="text-cyan-800">{mysteryMission.title}</strong> - {mysteryMission.description}
+                </p>
+                <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+                  <div className="flex gap-1.5 items-center">
+                    <button
+                      onClick={() => { playSound('click'); shuffleMysteryMission(); }}
+                      className="text-[8px] font-pixel text-slate-500 hover:text-purple-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm"
+                      title="Shuffle challenge (costs 10 XP)"
+                    >
+                      SHUFFLE (-10XP)
+                    </button>
+                    <button
+                      disabled={mysteryMissionSkips <= 0}
+                      onClick={() => { playSound('click'); skipMysteryMission(); }}
+                      className="text-[8px] font-pixel text-slate-500 hover:text-cyan-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      SKIP ({mysteryMissionSkips}/1)
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleCompleteMysteryMission}
+                    className="px-3 py-2 bg-emerald-500 pixel-border text-slate-800 text-xs font-pixel hover:bg-emerald-400 transition-colors font-bold uppercase animate-pulse"
+                  >
+                    DONE
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mysteryMissionState === 'completed' && mysteryMission && (
+            <div className="flex items-start gap-3 flex-1 w-full">
+              <div className="w-12 h-12 bg-white border border-pastel-yellow rounded flex items-center justify-center shrink-0 shadow-sm select-none">
+                <svg className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(217,119,6,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fbbf24" />
+                      <stop offset="50%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#d97706" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M18 2H6v2H2v6c0 2.2 1.8 4 4 4h2.2c.8 1.6 2.2 2.8 3.8 3.2V20H9v2h6v-2h-3v-2.8c1.6-.4 3-1.6 3.8-3.2H18c2.2 0 4-1.8 4-4V4h-4V2zm-10 8V6h2v4H8zm10-2h-2V6h2v2z" fill="url(#goldGrad)" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
+                <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
+                  Conquered today's real-life challenge! Claimed the <strong className="text-amber-700">"{mysteryMission.unlockedTitle}"</strong> title and the <strong className="text-amber-700">"{mysteryMission.unlockedCollectible?.name || 'Trophy'}"</strong> collectible.
+                </p>
+                <div className="flex items-center mt-auto pt-1 w-full">
+                  <button
+                    onClick={() => { playSound('click'); navigate('/profile'); }}
+                    className="w-full py-2 bg-[#88dce7] pixel-border text-slate-800 text-xs font-pixel font-bold hover:bg-pastel-yellow transition-colors text-center uppercase"
+                  >
+                    EQUIP TITLE
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+ 
+        <section className="panel-border-yellow p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors flex flex-col justify-between">
           <div
             onClick={() => { playSound('click'); navigate('/backpack'); }}
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
@@ -483,7 +651,7 @@ export default function Dashboard() {
               GO <span className="transform group-hover/header:translate-x-0.5 transition-transform font-bold">&gt;</span>
             </button>
           </div>
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 flex-1 w-full">
             <div
               onClick={() => { playSound('click'); navigate('/backpack'); }}
               className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0 cursor-pointer hover:bg-slate-50 transition-colors group/backpack shadow-sm"
@@ -493,18 +661,21 @@ export default function Dashboard() {
                 <path d="M5 4h14v2H5V4zm-1 3h16v13H4V7zm4 4v4h2v-4H8zm6 0v4h2v-4h-2zm-3-7h2v3h-2V4z" />
               </svg>
             </div>
-            <div>
+            <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
               <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Master quest <strong className="text-amber-700">Sets</strong> (grouped task series to build related skills) and manage your <strong className="text-amber-700">Backpack</strong> inventory tools to secure weekly goals!</p>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-slate-800">3/5 Complete</p>
-                <button onClick={(e) => handleComplete('wq', 10, e)} className="px-3 py-1 bg-pastel-cyan pixel-border text-slate-800 text-xs font-pixel hover:bg-pastel-yellow ml-2 transition-colors">DONE</button>
+              <div className="flex items-center mt-auto pt-1 w-full">
+                <button
+                  onClick={() => { playSound('click'); navigate('/backpack'); }}
+                  className="w-full py-2 bg-[#88dce7] pixel-border text-slate-800 text-xs font-pixel font-bold hover:bg-pastel-yellow transition-colors text-center uppercase"
+                >
+                  OPEN BACKPACK
+                </button>
               </div>
             </div>
           </div>
-          {popups['wq'] && <div className="absolute top-2 right-2 text-pastel-cyan font-bold font-pixel text-lg animate-float-up drop-shadow-md">+10XP</div>}
         </section>
-
-        <section className="panel-border-purple p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors">
+ 
+        <section className="panel-border-purple p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors flex flex-col justify-between">
           <div
             onClick={() => { playSound('click'); navigate('/quests'); }}
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
@@ -520,15 +691,19 @@ export default function Dashboard() {
               GO <span className="transform group-hover/header:translate-x-0.5 transition-transform font-bold">&gt;</span>
             </button>
           </div>
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 flex-1 w-full">
             <div className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0">
               <img alt="Monster" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJqvHAG-77KicVUI6E5y9OaLNkH_KmJdNe55qpYx88_5Bj9UidrzNgUD0CzFxKy2FFiALRwoWNCCG9RkV_v_dfOJVIyGRVx22_Onm79syyy4NPBX7OloQvVyVXcSFYoxDXgy5TYkrkulfSxLFP0ReMg7Zm5oQFl5wc_Bl3xZfUSLwIRRdfb07fWmemFXoJ1UHPvh1EaJ60SkoJmzSlTIJdmqlutsGL6ckXI4nuRgosI8DNoXrYHpn8-MXomLHo6QXOMDGIske93lA" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
               <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Face powerful monsters in the turn-based RPG arena. Click <strong className="text-purple-700">FIGHT</strong> to battle the boss, test your skills, and earn +50 XP!</p>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-slate-800">1/5 Complete</p>
-                <button onClick={(e) => { e.preventDefault(); startBossBattle(); }} className="px-3 py-1 bg-pastel-pink pixel-border text-slate-800 text-xs font-pixel hover:bg-pastel-yellow ml-2 transition-colors">FIGHT</button>
+              <div className="flex items-center mt-auto pt-1 w-full">
+                <button
+                  onClick={(e) => { e.preventDefault(); startBossBattle(); }}
+                  className="w-full py-2 bg-pastel-pink pixel-border text-slate-800 text-xs font-pixel font-bold hover:bg-pastel-yellow transition-colors text-center uppercase"
+                >
+                  FIGHT BOSS
+                </button>
               </div>
             </div>
           </div>
@@ -1013,6 +1188,118 @@ export default function Dashboard() {
               )}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* 1. Mystery Mission Unlock Modal */}
+      {showUnlockModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-[fade-in_0.25s_ease-out]">
+          <div className="panel-border-purple p-6 bg-slate-900 border-4 border-purple-500 max-w-md w-full text-white relative text-center shadow-[0_0_30px_rgba(168,85,247,0.6)] animate-[scale-in_0.2s_ease-out]">
+            {/* Holographic glowing lines/glow effect */}
+            <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none"></div>
+            
+            <div className="text-pastel-purple font-pixel text-xs font-bold tracking-widest mb-2 uppercase animate-pulse">
+              ✨ SYSTEM SYNC COMPLETE ✨
+            </div>
+            
+            <h2 className="text-pastel-purple font-extrabold text-lg md:text-xl tracking-wider font-pixel mb-4 drop-shadow-[0_0_8px_#d946ef]">
+              MYSTERY MISSION CHEST UNLOCKED!
+            </h2>
+            
+            {/* Spinning chest visual */}
+            <div className="my-6 relative flex justify-center">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-800 to-indigo-900 border-4 border-purple-400 flex items-center justify-center text-6xl select-none shadow-[0_0_20px_#a855f7] animate-[bounce_3s_infinite_ease-in-out]">
+                🎁
+              </div>
+              <div className="absolute -top-2 -right-2 text-2xl animate-[spin_6s_infinite_linear]">⭐</div>
+              <div className="absolute -bottom-2 -left-2 text-2xl animate-[spin_8s_infinite_linear]">✨</div>
+            </div>
+
+            <p className="text-slate-300 text-xs leading-relaxed mb-6 font-medium">
+              Ho ho! Magnificent! You completed all daily habits on the Quest Board! Merchant Alistair has revealed a secret, real-world <strong className="text-pastel-purple">Mystery Mission</strong> for you. Complete it to unlock exclusive rewards!
+            </p>
+
+            <button
+              onClick={() => { playSound('click'); setShowUnlockModal(false); acceptMysteryMission(); }}
+              className="w-full py-3 bg-pastel-pink hover:bg-pastel-yellow text-slate-800 border-2 border-slate-800 font-pixel text-[10px] font-black tracking-wider shadow-[4px_4px_0px_#1e293b] active:translate-y-[2px] active:shadow-none hover:translate-y-[-1px] transition-all cursor-pointer text-center"
+            >
+              REVEAL & ACCEPT MYSTERY MISSION ⚡
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Rewards Success Modal */}
+      {showRewardsModal && mysteryMission && (
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-[fade-in_0.25s_ease-out]">
+          <div className="panel-border-yellow p-6 bg-slate-900 border-4 border-yellow-500 max-w-md w-full text-white relative text-center shadow-[0_0_40px_rgba(251,191,36,0.6)] animate-[scale-in_0.2s_ease-out]">
+            <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none"></div>
+
+            <div className="text-pastel-yellow font-pixel text-xs font-bold tracking-widest mb-2 uppercase animate-pulse">
+              🏆 MISSION ACCOMPLISHED 🏆
+            </div>
+
+            <h2 className="text-pastel-yellow font-extrabold text-lg md:text-xl tracking-wider font-pixel mb-4 drop-shadow-[0_0_10px_#fbbf24]">
+              SPONTANEOUS HERO REWARD!
+            </h2>
+
+            {/* Glowing awards grid */}
+            <div className="bg-slate-950/80 border border-slate-800/80 p-4 rounded-lg my-5 flex flex-col gap-4 text-left shadow-inner">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                <span className="text-[10px] text-slate-500 font-pixel font-bold">REWARD</span>
+                <span className="text-[10px] text-emerald-400 font-pixel font-bold">GRANTED</span>
+              </div>
+
+              {/* XP */}
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-300 font-medium">Daily Fun Quest XP</span>
+                <span className="text-xs text-pastel-pink font-bold font-pixel">+{mysteryMission.xpReward} XP</span>
+              </div>
+
+              {/* Title */}
+              {mysteryMission.unlockedTitle && (
+                <div className="flex justify-between items-center border-t border-slate-900/60 pt-2">
+                  <span className="text-xs text-slate-300 font-medium">New Equipped Title</span>
+                  <span className="text-xs text-amber-400 font-bold border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 rounded uppercase font-pixel tracking-wider">
+                    {mysteryMission.unlockedTitle}
+                  </span>
+                </div>
+              )}
+
+              {/* Badge */}
+              {mysteryMission.unlockedBadge && (
+                <div className="flex justify-between items-center border-t border-slate-900/60 pt-2">
+                  <span className="text-xs text-slate-300 font-medium">Legendary Achievement Badge</span>
+                  <span className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/30 px-2 py-0.5 rounded font-pixel">
+                    <span>{mysteryMission.unlockedBadge.icon}</span>
+                    <span>{mysteryMission.unlockedBadge.name}</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Collectible */}
+              {mysteryMission.unlockedCollectible && (
+                <div className="flex justify-between items-center border-t border-slate-900/60 pt-2">
+                  <span className="text-xs text-slate-300 font-medium">Rare Collectible Showcase Item</span>
+                  <span className="text-xs font-semibold text-slate-100 flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/30 px-2 py-0.5 rounded font-pixel">
+                    <span>{mysteryMission.unlockedCollectible.icon}</span>
+                    <span>{mysteryMission.unlockedCollectible.name}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-slate-300 text-xs leading-relaxed mb-6">
+              Incredible bravery, hero! You stepped outside the digital world to complete today's spontaneous real-life challenge. You are now officially recognized as a pioneer of spontaneous adventures!
+            </p>
+
+            <button
+              onClick={() => { playSound('click'); setShowRewardsModal(false); navigate('/profile'); }}
+              className="w-full py-3 bg-pastel-yellow hover:bg-pastel-pink text-slate-800 border-2 border-slate-800 font-pixel text-[10px] font-black tracking-wider shadow-[4px_4px_0px_#1e293b] hover:translate-y-[-1px] transition-all cursor-pointer text-center"
+            >
+              SWEET! EQUIP MY REWARDS 👑
+            </button>
           </div>
         </div>
       )}
