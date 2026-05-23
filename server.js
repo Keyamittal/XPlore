@@ -56,10 +56,19 @@ db.serialize(() => {
     bonus_xp INTEGER,
     accepted BOOLEAN DEFAULT 0,
     accepted_by TEXT DEFAULT NULL,
+    accepted_by_email TEXT DEFAULT NULL,
+    accepted_by_phone TEXT DEFAULT NULL,
     email TEXT,
     phone TEXT,
     user_id TEXT DEFAULT NULL
   )`);
+
+  db.run(`ALTER TABLE skills ADD COLUMN accepted_by_email TEXT`, (err) => {
+    // Safe fallback if column already exists
+  });
+  db.run(`ALTER TABLE skills ADD COLUMN accepted_by_phone TEXT`, (err) => {
+    // Safe fallback if column already exists
+  });
 
   db.run(`CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
@@ -248,7 +257,12 @@ app.get('/api/users/leaderboard', (req, res) => {
 
 // 1. Get All Shared Skills
 app.get('/api/skills', (req, res) => {
-  db.all("SELECT * FROM skills ORDER BY rowid DESC", [], (err, rows) => {
+  db.all(`
+    SELECT s.*, u.username as accepted_by_username 
+    FROM skills s
+    LEFT JOIN users u ON s.accepted_by = u.id
+    ORDER BY s.rowid DESC
+  `, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     
     const formatted = rows.map(r => ({
@@ -258,7 +272,10 @@ app.get('/api/skills', (req, res) => {
       postedBy: r.posted_by,
       bonusXp: r.bonus_xp,
       userId: r.user_id,
-      acceptedBy: r.accepted_by
+      acceptedBy: r.accepted_by,
+      acceptedByUsername: r.accepted_by_username,
+      acceptedByEmail: r.accepted_by_email,
+      acceptedByPhone: r.accepted_by_phone
     }));
     res.json({ skills: formatted });
   });
@@ -285,12 +302,12 @@ app.post('/api/skills', (req, res) => {
 
 // 3. Accept a Skill Exchange (Match Secured)
 app.post('/api/skills/accept', (req, res) => {
-  const { id, userId } = req.body;
+  const { id, userId, email, phone } = req.body;
   if (!id || !userId) return res.status(400).json({ error: 'Missing id or userId' });
 
   db.run(
-    `UPDATE skills SET accepted = 1, accepted_by = ? WHERE id = ?`,
-    [userId, id],
+    `UPDATE skills SET accepted = 1, accepted_by = ?, accepted_by_email = ?, accepted_by_phone = ? WHERE id = ?`,
+    [userId, email, phone, id],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true });
@@ -330,6 +347,15 @@ app.post('/api/sessions', (req, res) => {
 app.delete('/api/sessions/:id', (req, res) => {
   const { id } = req.params;
   db.run("DELETE FROM sessions WHERE id = ?", [id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// 4. Delete a Skill Exchange Posting
+app.delete('/api/skills/:id', (req, res) => {
+  const { id } = req.params;
+  db.run("DELETE FROM skills WHERE id = ?", [id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });

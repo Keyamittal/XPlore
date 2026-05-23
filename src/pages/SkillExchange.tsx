@@ -17,6 +17,11 @@ export interface SkillOffer {
   accepted: boolean;
   email?: string;
   phone?: string;
+  userId?: string;
+  acceptedBy?: string;
+  acceptedByUsername?: string;
+  acceptedByEmail?: string;
+  acceptedByPhone?: string;
 }
 
 export interface ScheduledSession {
@@ -72,6 +77,12 @@ export default function SkillExchange() {
   const [filter, setFilter] = useState<SkillOfferType | 'all' | 'matched'>('all');
   const [showModal, setShowModal] = useState(false);
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
+
+  // Matching accept prompt states
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [questToAccept, setQuestToAccept] = useState<SkillOffer | null>(null);
+  const [acceptorEmail, setAcceptorEmail] = useState('');
+  const [acceptorPhone, setAcceptorPhone] = useState('');
   
   // Form states
   const [skillType, setSkillType] = useState<SkillOfferType>('offer');
@@ -162,7 +173,12 @@ export default function SkillExchange() {
       const res = await fetch('http://localhost:3000/api/skills/accept', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, userId: currentUser.id })
+        body: JSON.stringify({ 
+          id, 
+          userId: currentUser.id,
+          email: `${currentUser.username.toLowerCase()}@xplore.edu`,
+          phone: '+1 (555) 012-' + Math.floor(1000 + Math.random() * 9000)
+        })
       });
       if (!res.ok) throw new Error("Failed to accept match in database");
 
@@ -178,6 +194,24 @@ export default function SkillExchange() {
       console.error("Match Acceptance Error:", err);
       alert(err.message || "Failed to secure match.");
     }
+  };
+
+  const handleAcceptClick = (q: SkillOffer) => {
+    if (!currentUser?.id) return;
+    if (q.userId === currentUser.id || (q as any).user_id === currentUser.id || q.postedBy === currentUser.username) {
+      alert("You cannot accept your own post!");
+      return;
+    }
+    setQuestToAccept(q);
+    setAcceptorEmail(`${currentUser.username.toLowerCase()}@xplore.edu`);
+    setAcceptorPhone('');
+    setShowAcceptModal(true);
+  };
+
+  const handlePostSkillClick = () => {
+    setSkillEmail(`${currentUser?.username?.toLowerCase() || 'adventurer'}@xplore.edu`);
+    setSkillPhone('');
+    setShowModal(true);
   };
 
   const handleScheduleClick = (q: SkillOffer) => {
@@ -293,13 +327,13 @@ export default function SkillExchange() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200/50 pb-4">
         <div>
-          <h1 className="text-pastel-cyan font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_8px_rgba(14,116,144,0.6)]">SKILL EXCHANGE</h1>
+          <h1 className="text-pastel-cyan font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_6px_rgba(14,116,144,0.25)]">SKILL EXCHANGE</h1>
           <p className="text-slate-500 text-sm">Teach what you know. Learn what you don't. Earn bonus XP.</p>
         </div>
         <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
           <button 
-            className="font-pixel text-[10px] px-5 py-3 bg-pastel-cyan text-slate-800 border border-pastel-cyan hover:bg-transparent hover:text-pastel-cyan font-bold rounded shadow-[0_0_15px_rgba(14,116,144,0.4)] hover:shadow-[0_0_20px_rgba(14,116,144,0.25)_inset] transition-all flex items-center gap-2"
-            onClick={() => setShowModal(true)}
+            className="font-pixel text-[10px] px-5 py-3 bg-pastel-cyan text-slate-800 border border-pastel-cyan hover:bg-transparent hover:text-pastel-cyan font-bold rounded shadow-[0_0_15px_rgba(14,116,144,0.4)] hover:shadow-[0_0_20px_rgba(14,116,144,0.25)_inset] transition-all flex items-center gap-2 cursor-pointer"
+            onClick={handlePostSkillClick}
           >
             <Plus size={14} /> POST SKILL
           </button>
@@ -376,6 +410,20 @@ export default function SkillExchange() {
             <h3 className="font-bold text-lg text-slate-800 mb-1 leading-tight">{q.skill}</h3>
             <p className="text-sm text-slate-500 flex-1 leading-relaxed">{q.description}</p>
 
+            {(() => {
+              const isOwnSkill = q.userId === currentUser?.id || (q as any).user_id === currentUser?.id || q.postedBy === currentUser?.username;
+              if (q.accepted && isOwnSkill) {
+                const partner = (q as any).acceptedByUsername || 'Adventurer';
+                return (
+                  <div className="mt-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 p-2.5 rounded text-[8.5px] font-pixel leading-normal animate-pulse flex items-center gap-1.5 shadow-sm">
+                    <span>🔔</span>
+                    <span><strong>{partner.toUpperCase()}</strong> accepted your quest! Match secured!</span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             <div className="flex flex-wrap gap-2 mt-2">
               {q.tags.map(t => (
                 <span key={t} className="bg-white border border-slate-300 text-slate-600 font-pixel text-[7px] px-2 py-1 rounded-sm">
@@ -386,49 +434,103 @@ export default function SkillExchange() {
 
             {/* Locked Contact Block */}
             {q.accepted && (
-              <div className="mt-2 p-3 bg-slate-900 text-pastel-cyan border border-slate-700 rounded font-mono text-[9px] flex flex-col gap-1.5 animate-[fade-in_0.3s_ease-out]">
-                <div className="text-pastel-pink font-bold border-b border-slate-800 pb-1 flex justify-between items-center font-pixel">
-                  <span>⚡ CONTACT INFORMATION</span>
-                  <span className="text-[7px] font-mono text-slate-400">ID: {q.id}</span>
-                </div>
-                <div><span className="text-slate-400">EMAIL:</span> <a href={`mailto:${q.email}`} className="underline hover:text-pastel-pink font-sans text-[10px]">{q.email || 'N/A'}</a></div>
-                <div><span className="text-slate-400">PHONE:</span> <a href={`tel:${q.phone}`} className="underline hover:text-pastel-pink font-sans text-[10px]">{q.phone || 'N/A'}</a></div>
-                <button 
-                  onClick={() => handleScheduleClick(q)}
-                  className="mt-2 w-full py-1 bg-pastel-cyan text-slate-900 border border-pastel-cyan font-pixel text-[8px] hover:bg-transparent hover:text-pastel-cyan transition-all rounded shadow-[0_0_5px_rgba(14,116,144,0.3)]"
-                >
-                  📅 SCHEDULE SESSION
-                </button>
-              </div>
+              (() => {
+                const isOwnSkill = q.userId === currentUser?.id || (q as any).user_id === currentUser?.id || q.postedBy === currentUser?.username;
+                const contactEmail = isOwnSkill 
+                  ? (q as any).acceptedByEmail || `${((q as any).acceptedByUsername || 'partner').toLowerCase()}@xplore.edu`
+                  : q.email || 'N/A';
+                const contactPhone = isOwnSkill
+                  ? (q as any).acceptedByPhone || '+1 (555) 018-9321'
+                  : q.phone || 'N/A';
+                const contactName = isOwnSkill
+                  ? (q as any).acceptedByUsername || 'Adventurer'
+                  : q.postedBy;
+
+                return (
+                  <div className="mt-2 p-3 bg-slate-900 text-pastel-cyan border border-slate-700 rounded font-mono text-[9px] flex flex-col gap-1.5 animate-[fade-in_0.3s_ease-out]">
+                    <div className="text-pastel-pink font-bold border-b border-slate-800 pb-1 flex justify-between items-center font-pixel">
+                      <span>⚡ CONTACT INFORMATION ({contactName.toUpperCase()})</span>
+                      <span className="text-[7px] font-mono text-slate-400">ID: {q.id}</span>
+                    </div>
+                    <div><span className="text-slate-400">EMAIL:</span> <a href={`mailto:${contactEmail}`} className="underline hover:text-pastel-pink font-sans text-[10px]">{contactEmail}</a></div>
+                    <div><span className="text-slate-400">PHONE:</span> <a href={`tel:${contactPhone}`} className="underline hover:text-pastel-pink font-sans text-[10px]">{contactPhone}</a></div>
+                    <button 
+                      onClick={() => handleScheduleClick(q)}
+                      className="mt-2 w-full py-1 bg-pastel-cyan text-slate-900 border border-pastel-cyan font-pixel text-[8px] hover:bg-transparent hover:text-pastel-cyan transition-all rounded shadow-[0_0_5px_rgba(14,116,144,0.3)]"
+                    >
+                      📅 SCHEDULE SESSION
+                    </button>
+                  </div>
+                );
+              })()
             )}
 
-            <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-white border border-slate-300 flex items-center justify-center font-pixel text-[8px] text-slate-800">
+            <div className="flex justify-between items-center flex-wrap gap-3 mt-4 pt-4 border-t border-slate-200/50">
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="w-8 h-8 rounded bg-white border border-slate-300 flex items-center justify-center font-pixel text-[8px] text-slate-800 shrink-0">
                   {q.initials}
                 </div>
                 <div>
-                  <p className="text-slate-800 text-sm font-bold leading-tight">{q.postedBy}</p>
-                  <p className="text-pastel-cyan font-pixel text-[7px] flex items-center gap-1 mt-1"><Clock size={8} /> {q.duration}</p>
+                  <p className="text-slate-800 text-sm font-bold leading-tight truncate">{q.postedBy}</p>
+                  <p className="text-pastel-cyan font-pixel text-[7px] flex items-center gap-1 mt-1 whitespace-nowrap"><Clock size={8} /> {q.duration}</p>
                 </div>
               </div>
               
               {(() => {
                 const isOwnSkill = q.userId === currentUser?.id || (q as any).user_id === currentUser?.id || q.postedBy === currentUser?.username;
+                
+                const deleteBtn = isOwnSkill ? (
+                  <button
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to delete this skill exchange quest?")) {
+                        try {
+                          const res = await fetch(`http://localhost:3000/api/skills/${q.id}`, {
+                            method: 'DELETE'
+                          });
+                          if (!res.ok) throw new Error("Failed to delete quest");
+                          await fetchSkillsAndSessions();
+                        } catch (err: any) {
+                          console.error("Delete Quest Error:", err);
+                          alert(err.message || 'Failed to delete quest.');
+                        }
+                      }
+                    }}
+                    className="font-pixel text-[8px] px-3 py-2 bg-rose-50 border border-rose-200 text-rose-500 hover:bg-rose-500 hover:text-white transition-all rounded cursor-pointer whitespace-nowrap shrink-0"
+                  >
+                    DELETE
+                  </button>
+                ) : null;
+
                 if (q.accepted) {
-                  return <span className="font-pixel text-[8px] text-slate-500 border border-slate-300 px-2 py-1 rounded">✓ MATCHED</span>;
+                  const partner = (q as any).acceptedByUsername || 'partner';
+                  const isAcceptedByMe = q.acceptedBy === currentUser?.id;
+                  return (
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                      <span className="font-pixel text-[8px] text-emerald-600 border border-emerald-400 bg-emerald-50 px-3 py-2 rounded whitespace-nowrap">
+                        {isAcceptedByMe ? '✓ MY MATCH' : `✓ MATCHED BY ${partner.toUpperCase()}`}
+                      </span>
+                      {deleteBtn}
+                    </div>
+                  );
                 }
+                
                 if (isOwnSkill) {
-                  return <span className="font-pixel text-[8px] text-slate-400 bg-slate-100 border border-slate-200 px-2 py-1 rounded select-none">★ YOUR POST</span>;
+                  return (
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                      <span className="font-pixel text-[8px] text-slate-400 bg-slate-100 border border-slate-200 px-3 py-2 rounded select-none whitespace-nowrap">★ YOUR POST</span>
+                      {deleteBtn}
+                    </div>
+                  );
                 }
+                
                 return (
                   <button
-                    className={`font-pixel text-[8px] px-3 py-2 rounded transition-all border ${
+                    className={`font-pixel text-[8px] px-3 py-2 rounded transition-all border cursor-pointer ${
                       q.type === 'offer' 
                         ? 'bg-pastel-cyan/10 border-pastel-cyan text-pastel-cyan hover:bg-pastel-cyan hover:text-slate-800 hover:shadow-[0_0_10px_rgba(14,116,144,0.4)]' 
                         : 'bg-pastel-pink/10 border-pastel-pink text-pastel-pink hover:bg-pastel-pink hover:text-slate-800 hover:shadow-[0_0_10px_#ff00ff]'
                     }`}
-                    onClick={() => handleAccept(q.id, q.bonusXp)}
+                    onClick={() => handleAcceptClick(q)}
                   >
                     ACCEPT →
                   </button>
@@ -577,6 +679,100 @@ export default function SkillExchange() {
               
               <button type="submit" className="mt-6 font-pixel text-[10px] w-full flex items-center justify-center gap-2 bg-pastel-pink text-slate-800 p-3 rounded font-bold hover:bg-pastel-yellow hover:shadow-[0_0_20px_rgba(248,183,193,0.5)] transition-all">
                 📅 LOCK SESSION
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Accept Quest Modal */}
+      {showAcceptModal && questToAccept && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-[fade-in_0.2s_ease-out]" onClick={() => setShowAcceptModal(false)}>
+          <div 
+            className="panel-border-cyan bg-white p-8 w-full max-w-sm shadow-[0_0_30px_rgba(14,116,144,0.2)_inset] rounded-xl relative" 
+            onClick={e => e.stopPropagation()}
+            role="dialog" 
+            aria-modal="true"
+          >
+            <div className="flex justify-between items-center mb-6 border-b border-pastel-cyan/50 pb-4">
+              <h2 className="font-pixel text-[10px] text-pastel-cyan flex items-center gap-1.5">
+                🤝 SECURE MATCH
+              </h2>
+              <button 
+                className="text-slate-500 hover:text-slate-800 hover:bg-pastel-yellow p-1 rounded transition-colors" 
+                onClick={() => setShowAcceptModal(false)} 
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-[10px] text-slate-500 mb-4 leading-normal font-pixel text-center">
+              PROVIDE YOUR CONTACT DETAILS SO YOUR PARTNER ({questToAccept.postedBy.toUpperCase()}) CAN COORDINATE WITH YOU!
+            </p>
+            
+            <form className="flex flex-col gap-4" onSubmit={async (e) => {
+              e.preventDefault();
+              if (!currentUser?.id || !questToAccept) return;
+              
+              try {
+                // 1. Mark accepted in the shared database
+                const res = await fetch('http://localhost:3000/api/skills/accept', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    id: questToAccept.id, 
+                    userId: currentUser.id,
+                    email: acceptorEmail,
+                    phone: acceptorPhone
+                  })
+                });
+                if (!res.ok) throw new Error("Failed to accept match in database");
+
+                // 2. Add XP
+                await addXpDirectly(questToAccept.bonusXp);
+
+                // 3. Trigger full sync from database
+                await fetchSkillsAndSessions();
+
+                setAccepted(p => ({ ...p, [questToAccept.id]: true }));
+                setTimeout(() => setAccepted(p => ({ ...p, [questToAccept.id]: false })), 2000);
+
+                setShowAcceptModal(false);
+                setQuestToAccept(null);
+              } catch (err: any) {
+                console.error("Match Acceptance Error:", err);
+                alert(err.message || "Failed to secure match.");
+              }
+            }}>
+              <div className="flex flex-col gap-2">
+                <label className="font-pixel text-[8px] text-pastel-cyan" htmlFor="acceptor-email">YOUR EMAIL</label>
+                <input 
+                  id="acceptor-email" 
+                  value={acceptorEmail}
+                  onChange={e => setAcceptorEmail(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none text-[11px]" 
+                  type="email" 
+                  placeholder="e.g. you@xplore.edu"
+                  required 
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="font-pixel text-[8px] text-pastel-cyan" htmlFor="acceptor-phone">YOUR CONTACT NUMBER</label>
+                <input 
+                  id="acceptor-phone" 
+                  value={acceptorPhone}
+                  onChange={e => setAcceptorPhone(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none text-[11px]" 
+                  type="tel" 
+                  placeholder="e.g. +1 (555) 012-3456" 
+                  required 
+                />
+              </div>
+              
+              <button type="submit" className="mt-6 font-pixel text-[10px] w-full flex items-center justify-center gap-2 bg-pastel-cyan text-slate-800 p-3 rounded font-bold hover:bg-pastel-yellow hover:shadow-[0_0_20px_rgba(14,116,144,0.5)] transition-all">
+                🤝 CONFIRM MATCH & SECURE
               </button>
             </form>
           </div>

@@ -55,7 +55,7 @@ export default function Quests() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/50 pb-4">
         <div>
-          <h1 className="text-pastel-cyan font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_8px_rgba(14,116,144,0.6)]">QUEST BOARD</h1>
+          <h1 className="text-pastel-cyan font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_6px_rgba(14,116,144,0.25)]">QUEST BOARD</h1>
           <p className="text-slate-500 text-sm">Complete daily missions to earn XP and power up.</p>
         </div>
         <div className="flex bg-slate-50 border border-pastel-cyan px-6 py-3 rounded-lg gap-6 shadow-sm">
@@ -69,7 +69,7 @@ export default function Quests() {
             <span className={`${
               totalXP === 0 
                 ? 'text-pastel-purple' 
-                : 'text-pastel-pink drop-shadow-[0_0_5px_#ff00ff]'
+                : 'text-pastel-pink'
             } font-bold text-xl`}>
               +{totalXP}
             </span>

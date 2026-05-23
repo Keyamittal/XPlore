@@ -10,10 +10,10 @@ export default {
         inter: ['Inter', 'sans-serif'],
       },
       colors: {
-        'pastel-pink': '#F48FB1',
+        'pastel-pink': '#cc6d78',
         'pastel-cyan': '#0E7490',
-        'pastel-purple': '#CE93D8',
-        'pastel-yellow': '#FFF5D1',
+        'pastel-purple': '#5c4257',
+        'pastel-yellow': '#f0dccf',
         'pastel-green': '#81C784',
         'light-bg': '#FDFBF7',
         'panel-bg': '#FFFFFF',

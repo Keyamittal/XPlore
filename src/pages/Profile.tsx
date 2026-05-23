@@ -1,6 +1,7 @@
 import { Lock, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { badges, titles } from '../data/badges';
+import { badges, titles, checkBadgeUnlocked } from '../data/badges';
 import { playSound } from '../utils/audio';
 
 
@@ -41,10 +42,47 @@ const customTitles = [
 ];
 
 export default function Profile() {
-  const { user: currentUser, logout, unlockedTitles, activeTitle, equipTitle, unlockedMysteryBadges } = useGame();
+  const { user: currentUser, logout, unlockedTitles, activeTitle, equipTitle, unlockedMysteryBadges, quests } = useGame();
   const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
-  const unlocked = [...badges.filter(b => b.unlocked), ...unlockedMysteryBadges];
-  const locked = badges.filter(b => !b.unlocked);
+
+  const [skillsCount, setSkillsCount] = useState(0);
+  const [sessionsCount, setSessionsCount] = useState(0);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    // Fetch skills to count user postings and accepted/matched exchanges
+    fetch('http://localhost:3000/api/skills')
+      .then(res => res.json())
+      .then(data => {
+        if (data.skills) {
+          const userSkills = data.skills.filter(
+            (s: any) => s.userId === currentUser.id || s.postedBy === currentUser.username || s.acceptedBy === currentUser.id
+          );
+          setSkillsCount(userSkills.length);
+        }
+      })
+      .catch(err => console.error("Error fetching skills for profile:", err));
+
+    // Fetch sessions to count accepted matches
+    fetch(`http://localhost:3000/api/sessions/${currentUser.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.sessions) {
+          setSessionsCount(data.sessions.length);
+        }
+      })
+      .catch(err => console.error("Error fetching sessions for profile:", err));
+  }, [currentUser]);
+
+  const completedQuestsCount = quests.filter(q => q.completed).length;
+
+  const dynamicBadges = badges.map(b => ({
+    ...b,
+    unlocked: checkBadgeUnlocked(b.id, currentUser, completedQuestsCount, skillsCount, sessionsCount)
+  }));
+
+  const unlocked = [...dynamicBadges.filter(b => b.unlocked), ...unlockedMysteryBadges];
+  const locked = dynamicBadges.filter(b => !b.unlocked);
 
   const handleLogout = () => {
     playSound('click');
@@ -53,9 +91,9 @@ export default function Profile() {
 
   const stats = [
     { label: 'TOTAL XP', value: currentUser.totalXP.toLocaleString(), icon: '⚡', color: 'var(--color-accent)' },
-    { label: 'QUESTS', value: currentUser.questsCompleted, icon: '⚔️', color: '#7EC8C8' },
+    { label: 'QUESTS', value: completedQuestsCount.toLocaleString(), icon: '⚔️', color: '#7EC8C8' },
     { label: 'STREAK', value: `${currentUser.streak}D`, icon: '🔥', color: 'var(--color-gold)' },
-    { label: 'SKILLS', value: currentUser.skillsShared, icon: '🤝', color: '#B07EEC' },
+    { label: 'SKILLS', value: skillsCount.toLocaleString(), icon: '🤝', color: '#B07EEC' },
   ];
 
   return (
@@ -124,13 +162,13 @@ export default function Profile() {
           {unlocked.map(b => (
             <div
               key={b.id}
-              className="panel-border-pink p-4 flex flex-col items-center gap-3 hover:-translate-y-1 transition-all duration-300 cursor-pointer text-center bg-white border-2"
+              className="panel-border-pink p-4 flex flex-col items-center justify-between min-h-[140px] gap-3 hover:-translate-y-1 transition-all duration-300 cursor-pointer text-center bg-white border-2"
               style={{ borderColor: rarityBorder[b.rarity] }}
               title={b.description}
             >
-              <div className="text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">{b.icon}</div>
+              <div className="text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] mt-1">{b.icon}</div>
               <p className="font-bold text-sm text-slate-800">{b.name}</p>
-              <span className="font-pixel text-[8px] border-b-2" style={{ color: rarityColors[b.rarity], borderBottomColor: rarityBorder[b.rarity] }}>
+              <span className="font-pixel text-[8px] border-b-2 mt-auto" style={{ color: rarityColors[b.rarity], borderBottomColor: rarityBorder[b.rarity] }}>
                 {b.rarity.toUpperCase()}
               </span>
             </div>

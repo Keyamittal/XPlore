@@ -94,13 +94,13 @@ export default function Backpack() {
       {/* Page Header - Restructured to match other beautiful page headers and blend perfectly */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/50 pb-4">
         <div>
-          <h1 className="text-pastel-purple font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_8px_rgba(206,147,216,0.6)]">BACKPACK & SHOP</h1>
+          <h1 className="font-bold text-2xl font-pixel mb-3 text-[#5c4257] drop-shadow-[0_0_8px_rgba(92,66,87,0.4)]">BACKPACK & SHOP</h1>
           <p className="text-slate-500 text-sm">Gear up, manage resources, and prepare for glory!</p>
         </div>
         
         {/* Restructured Gold Balance Pill (Matches Quest Board header styling, with static coin, no spin) */}
-        <div className="flex bg-slate-50 border border-pastel-yellow px-6 py-3 rounded-lg gap-3 items-center shadow-sm">
-          <div className="w-8 h-8 rounded-full bg-pastel-yellow flex items-center justify-center text-lg select-none shadow-inner border border-amber-600">
+        <div className="flex bg-slate-50 border border-[#f0dccf] px-6 py-3 rounded-lg gap-3 items-center shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-[#f0dccf] flex items-center justify-center text-lg select-none shadow-inner border border-amber-600">
             🪙
           </div>
           <div className="flex flex-col items-center md:items-start">
@@ -142,13 +142,12 @@ export default function Backpack() {
         </div>
       )}
 
-      {/* Tabs Layout */}
-      <div className="flex border-b-4 border-slate-800 mb-2 overflow-x-auto">
+      <div className="flex border-b-4 border-slate-800 mb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => { playSound('click'); setActiveTab('backpack'); }}
           className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
             activeTab === 'backpack'
-              ? 'bg-[#F8B7C1] text-slate-800 border-b-4 border-b-[#F8B7C1] translate-y-[4px]'
+              ? 'bg-[#cc6d78] text-white border-b-4 border-b-[#cc6d78] translate-y-[4px]'
               : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
           }`}
         >
@@ -158,7 +157,7 @@ export default function Backpack() {
           onClick={() => { playSound('click'); setActiveTab('shop'); }}
           className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
             activeTab === 'shop'
-              ? 'bg-pastel-yellow text-slate-800 border-b-4 border-b-pastel-yellow translate-y-[4px]'
+              ? 'bg-[#f0dccf] text-slate-800 border-b-4 border-b-[#f0dccf] translate-y-[4px]'
               : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
           }`}
         >
@@ -168,11 +167,11 @@ export default function Backpack() {
           onClick={() => { playSound('click'); setActiveTab('collectibles'); }}
           className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
             activeTab === 'collectibles'
-              ? 'bg-pastel-purple text-white border-b-4 border-b-pastel-purple translate-y-[4px]'
+              ? 'bg-[#5c4257] text-white border-b-4 border-b-[#5c4257] translate-y-[4px]'
               : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
           }`}
         >
-          🏆 RARE COLLECTIBLES ({unlockedCollectibles?.length || 0}/8)
+          RARE COLLECTIBLES ({unlockedCollectibles?.length || 0}/8)
         </button>
       </div>
 
@@ -184,9 +183,14 @@ export default function Backpack() {
             return (
               <section
                 key={item.id}
-                className={`panel-border-pink p-5 flex flex-col justify-between bg-white transition-all ${
+                className={`p-5 flex flex-col justify-between bg-white transition-all border-4 border-slate-800 ${
                   isZero ? 'opacity-70 saturate-50' : 'hover:-translate-y-1 hover:shadow-md'
                 }`}
+                style={{
+                  boxShadow: 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #cc6d78',
+                  borderRadius: 0,
+                  position: 'relative'
+                }}
               >
                 <div>
                   {/* Item Header */}
@@ -218,7 +222,7 @@ export default function Backpack() {
                   className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all ${
                     isZero
                       ? 'bg-slate-100 text-slate-400 border-slate-400 shadow-none cursor-not-allowed opacity-50'
-                      : 'bg-[#F8B7C1] text-slate-800 hover:bg-pastel-yellow hover:translate-y-[-1px] cursor-pointer'
+                      : 'bg-[#cc6d78] text-white hover:bg-[#f0dccf] hover:text-slate-800 hover:translate-y-[-1px] cursor-pointer'
                   }`}
                 >
                   {isZero ? 'OUT OF STOCK' : `CONSUME / USE ${item.name.toUpperCase()}`}
@@ -237,7 +241,12 @@ export default function Backpack() {
             return (
               <section
                 key={item.id}
-                className="panel-border-yellow p-5 flex flex-col justify-between bg-white hover:-translate-y-1 hover:shadow-md transition-all"
+                className="p-5 flex flex-col justify-between bg-white hover:-translate-y-1 hover:shadow-md transition-all border-4 border-slate-800"
+                style={{
+                  boxShadow: 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #f0dccf',
+                  borderRadius: 0,
+                  position: 'relative'
+                }}
               >
                 <div>
                   {/* Shop Item Header */}
@@ -245,7 +254,7 @@ export default function Backpack() {
                     <span className="font-pixel text-[9px] text-amber-600 font-bold tracking-wider uppercase">
                       FOR SALE
                     </span>
-                    <span className="font-pixel text-[10px] bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1">
+                    <span className="font-pixel text-[10px] bg-[#f0dccf] border border-[#f0dccf] text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1">
                       🪙 {item.price}G
                     </span>
                   </div>
@@ -267,7 +276,7 @@ export default function Backpack() {
                   onClick={() => handlePurchase(item.id, item.name, item.price)}
                   className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all flex items-center justify-center gap-2 ${
                     canAfford
-                      ? 'bg-pastel-yellow text-slate-800 hover:bg-[#F8B7C1] hover:translate-y-[-1px] cursor-pointer'
+                      ? 'bg-[#f0dccf] text-slate-800 hover:bg-[#cc6d78] hover:text-white hover:translate-y-[-1px] cursor-pointer'
                       : 'bg-rose-50 text-rose-500 border-rose-300 shadow-none cursor-not-allowed hover:bg-rose-100'
                   }`}
                 >
@@ -282,9 +291,9 @@ export default function Backpack() {
       {/* Collectibles Panel */}
       {activeTab === 'collectibles' && (
         <div className="flex flex-col gap-6">
-          <div className="bg-pastel-purple/10 border-2 border-pastel-purple/50 p-4 rounded-lg text-slate-700 text-sm leading-relaxed">
-            <span className="font-bold text-pastel-purple font-pixel text-[10px] block mb-1">👑 THE TROPHY CABINET</span>
-            Earn rare, dynamic collectibles by completing the high-risk, high-fun <strong className="text-pastel-purple">Mystery Missions (Daily Fun Quests)</strong>. Equip your unlocked badges in the Profile and show off your real-life feats!
+          <div className="bg-[#5c4257]/10 border-2 border-[#5c4257]/50 p-4 rounded-lg text-slate-700 text-sm leading-relaxed">
+            <span className="font-bold text-[#5c4257] font-pixel text-[10px] block mb-1">👑 THE TROPHY CABINET</span>
+            Earn rare, dynamic collectibles by completing the high-risk, high-fun <strong className="text-[#5c4257]">Mystery Missions (Daily Fun Quests)</strong>. Equip your unlocked badges in the Profile and show off your real-life feats!
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -299,11 +308,14 @@ export default function Backpack() {
               return (
                 <section
                   key={collectible.id}
-                  className={`panel-border-purple p-5 bg-white relative flex flex-col justify-between items-center text-center transition-all ${
-                    isUnlocked
-                      ? 'hover:-translate-y-1 hover:shadow-lg shadow-[0_4px_20px_rgba(206,147,216,0.15)] bg-gradient-to-b from-white to-purple-50/20'
-                      : 'opacity-65 saturate-50'
-                  }`}
+                  className="p-5 bg-white relative flex flex-col justify-between items-center text-center transition-all border-4 border-slate-800"
+                  style={{
+                    boxShadow: isUnlocked 
+                      ? 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #5c4257' 
+                      : 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #cbd5e1',
+                    borderRadius: 0,
+                    position: 'relative'
+                  }}
                 >
                   {/* Status Banner */}
                   <div className="absolute top-3 right-3">
@@ -355,7 +367,7 @@ export default function Backpack() {
                           Unlocked: {unlockedRecord.date || 'Today'}
                         </div>
                       ) : (
-                        <div className="text-[10px] text-pastel-purple font-medium bg-purple-50 rounded py-1 px-1.5 border border-purple-100/40">
+                        <div className="text-[10px] text-[#5c4257] font-medium bg-[#5c4257]/10 rounded py-1 px-1.5 border border-[#5c4257]/20">
                           Quest: "{challenge.title}"
                         </div>
                       )}

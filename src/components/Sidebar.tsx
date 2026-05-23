@@ -11,7 +11,7 @@ export default function Sidebar() {
     <aside className="panel-border-pink w-full lg:w-[280px] flex flex-col p-5 shrink-0 lg:h-full">
       {/* Logo/Title */}
       <div className="text-center mb-6 flex justify-center">
-        <img src={logoImg} alt="XPLore Game Logo" className="w-32 h-auto rounded-lg shadow-sm border-2 border-pastel-pink object-contain" />
+        <img src={logoImg} alt="XPLore Game Logo" className="w-48 h-auto object-contain" />
       </div>
 
       {/* User Info Snippet */}

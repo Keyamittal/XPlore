@@ -4,6 +4,21 @@ import { useGame } from '../context/GameContext';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/audio';
 import { Lock } from 'lucide-react';
+import { badges, checkBadgeUnlocked } from '../data/badges';
+
+interface SkillOffer {
+  id: string;
+  type: 'offer' | 'request';
+  skill: string;
+  description: string;
+  tags: string[];
+  postedBy: string;
+  initials: string;
+  duration: string;
+  bonusXp: number;
+  accepted: boolean;
+  userId?: string;
+}
 
 export default function Dashboard() {
   const {
@@ -19,13 +34,124 @@ export default function Dashboard() {
     completeMysteryMission,
     shuffleMysteryMission,
     skipMysteryMission,
-    cheatCompleteAllQuests
+    cheatCompleteAllQuests,
+    unlockedMysteryBadges
   } = useGame();
   const navigate = useNavigate();
   
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [hasShownUnlockForState, setHasShownUnlockForState] = useState<string | null>(null);
+
+  const [skills, setSkills] = useState<SkillOffer[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [sessionsCount, setSessionsCount] = useState(0);
+
+  // Fetch actual skills and sessions in DB for dashboard
+  useEffect(() => {
+    let active = true;
+    const fetchSkillsAndSessions = async () => {
+      if (!currentUser?.id) return;
+      setSkillsLoading(true);
+      try {
+        const skillsRes = await fetch('http://localhost:3000/api/skills');
+        const skillsData = await skillsRes.json();
+        if (active && skillsRes.ok && skillsData.skills) {
+          setSkills(skillsData.skills);
+        }
+
+        const sessionsRes = await fetch(`http://localhost:3000/api/sessions/${currentUser.id}`);
+        const sessionsData = await sessionsRes.json();
+        if (active && sessionsRes.ok && sessionsData.sessions) {
+          setSessionsCount(sessionsData.sessions.length);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard statistics:', err);
+      } finally {
+        if (active) setSkillsLoading(false);
+      }
+    };
+    fetchSkillsAndSessions();
+    return () => {
+      active = false;
+    };
+  }, [currentUser]);
+
+  const getSkillLogoInfo = (skillName: string) => {
+    const name = skillName.toLowerCase();
+    if (name.includes('python')) {
+      return {
+        src: "https://lh3.googleusercontent.com/aida-public/AB6AXuArfFALn5dWrwM_nbqci6htaa0RqRfRjD1-Zk848xT8DmHjgZttPtJWcFj7QNrW2RKqJzvKtKC3ssqnV1A1xj8q3lMWgR6lkWU28V3pIRD6ZkQgX3ToASsIZwRhGGALne94k6CX-0pubpVptpBSf6FdPTP49QlBwBdy-mwlv6wijKSEvEDCfPCVELO97h6FEGQKvNgba4ExvudAb6r-MOREKYL9uX2cKmIjrA5Ta-ZYKZJcTXnLfoywdoQTXIs4ko54PhuFUQ0QEvc",
+        bgClass: "bg-pastel-cyan/20",
+        textColor: "group-hover:text-pastel-cyan",
+        borderClass: "hover:shadow-[4px_4px_0px_theme(colors.pastel-cyan)]"
+      };
+    }
+    if (name.includes('react')) {
+      return {
+        src: "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
+        bgClass: "bg-pastel-pink/20",
+        textColor: "group-hover:text-rose-500",
+        borderClass: "hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]"
+      };
+    }
+    if (name.includes('typescript') || name.includes('javascript') || name.includes(' js') || name.includes(' ts')) {
+      return {
+        src: "https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg",
+        bgClass: "bg-blue-100/50",
+        textColor: "group-hover:text-blue-500",
+        borderClass: "hover:shadow-[4px_4px_0px_rgba(59,130,246,0.5)]"
+      };
+    }
+    if (name.includes('git') || name.includes('github')) {
+      return {
+        src: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Git_icon.svg",
+        bgClass: "bg-orange-100/50",
+        textColor: "group-hover:text-orange-500",
+        borderClass: "hover:shadow-[4px_4px_0px_rgba(249,115,22,0.5)]"
+      };
+    }
+    if (name.includes('docker')) {
+      return {
+        src: "https://upload.wikimedia.org/wikipedia/commons/4/4e/Docker_(container_engine)_logo.svg",
+        bgClass: "bg-cyan-100/50",
+        textColor: "group-hover:text-cyan-500",
+        borderClass: "hover:shadow-[4px_4px_0px_rgba(6,182,212,0.5)]"
+      };
+    }
+    if (name.includes('rust')) {
+      return {
+        src: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Rust_programming_language_black_logo.svg",
+        bgClass: "bg-amber-100/50",
+        textColor: "group-hover:text-amber-600",
+        borderClass: "hover:shadow-[4px_4px_0px_rgba(217,119,6,0.5)]"
+      };
+    }
+    if (name.includes('figma')) {
+      return {
+        src: "https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg",
+        bgClass: "bg-purple-100/50",
+        textColor: "group-hover:text-purple-500",
+        borderClass: "hover:shadow-[4px_4px_0px_rgba(168,85,247,0.5)]"
+      };
+    }
+    if (name.includes('math') || name.includes('vector')) {
+      return {
+        src: "",
+        bgClass: "bg-green-100/50",
+        textColor: "group-hover:text-green-500",
+        isEmoji: "📐",
+        borderClass: "hover:shadow-[4px_4px_0px_rgba(34,197,94,0.5)]"
+      };
+    }
+    return {
+      src: "",
+      bgClass: "bg-slate-100",
+      textColor: "group-hover:text-pastel-cyan",
+      isEmoji: "💡",
+      borderClass: "hover:shadow-[4px_4px_0px_theme(colors.pastel-cyan)]"
+    };
+  };
 
   // Trigger Unlock Modal when transition to unlocked state happens
   useEffect(() => {
@@ -739,56 +865,82 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="flex flex-wrap justify-around items-start gap-4 flex-1 py-4">
-            {/* Pioneer Badge */}
-            <div className="flex flex-col items-center w-24 relative group cursor-pointer">
-              {/* Tooltip */}
-              <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center w-48 p-3 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-lg shadow-2xl text-center z-50 pointer-events-none transition-all">
-                <span className="font-pixel text-[8px] text-pastel-purple mb-1 font-bold tracking-wider">PIONEER</span>
-                <span className="text-[7px] font-pixel text-slate-400 mb-2 uppercase tracking-wide">Epic Achievement</span>
-                <p className="text-[10px] text-slate-200 leading-relaxed font-medium">Awarded for participating in the early beta launch of XPlore.</p>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900/95"></div>
-              </div>
+            {(() => {
+              const completedQuestsCount = quests.filter(q => q.completed).length;
+              const skillsCount = skills.filter(s => s.userId === currentUser?.id || s.postedBy === currentUser?.username || s.acceptedBy === currentUser?.id).length;
 
-              {/* Badge Icon Box */}
-              <div className="w-20 h-20 bg-white border-2 border-pastel-purple rounded-xl flex items-center justify-center p-3 shadow-sm hover:border-pastel-purple hover:shadow-md transition-all duration-300 transform hover:scale-105">
-                <img alt="Badge 1" className="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyld3ucNrBEnVMGVCs96XYLSdMMdu6oRN4MIEsZCWHuIsLL6ai0DFjz35-Figuq-09a4D63ibGnc7PHE13kG_W_EeuY44aWqcqRoRj8JRtJkvC12ZcYR9dQM3kkQi22VeemDAW2KLMN6bPxZfJ4E8Eeq2eUrSbks8S3PCErCTg4njrtrTx7zv5BBR1PBWJphR6d2XjrWNQo-MUuMI5-2WHf9MqLbouCww6-4TnqlR1Mc68BOY5yn6QelRPLKUowkMh70olMQkCoP4" />
-              </div>
-              <span className="font-pixel text-[10px] text-purple-900 text-center font-bold tracking-tight mt-3 break-words w-full leading-normal">Pioneer</span>
-            </div>
+              const dynamicBadges = badges.map(b => ({
+                ...b,
+                unlocked: checkBadgeUnlocked(b.id, currentUser, completedQuestsCount, skillsCount, sessionsCount)
+              }));
 
-            {/* 7 Day Streak Badge */}
-            <div className="flex flex-col items-center w-24 relative group cursor-pointer">
-              {/* Tooltip */}
-              <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center w-48 p-3 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-lg shadow-2xl text-center z-50 pointer-events-none transition-all">
-                <span className="font-pixel text-[8px] text-pastel-cyan mb-1 font-bold tracking-wider">7-DAY STREAK</span>
-                <span className="text-[7px] font-pixel text-slate-400 mb-2 uppercase tracking-wide">Common Achievement</span>
-                <p className="text-[10px] text-slate-200 leading-relaxed font-medium">Earned by completing at least one quest daily for 7 consecutive days.</p>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900/95"></div>
-              </div>
+              const unlockedBadges = [...dynamicBadges.filter(b => b.unlocked), ...unlockedMysteryBadges];
 
-              {/* Badge Icon Box */}
-              <div className="w-20 h-20 bg-white border-2 border-pastel-cyan rounded-xl flex items-center justify-center p-3 shadow-sm hover:border-pastel-cyan hover:shadow-md transition-all duration-300 transform hover:scale-105">
-                <img alt="Badge 2" className="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBA28AWJVzEP4rilqd2miatF92iCYMyzmSfu0nzQbWRtwKfe7Rxx76bXtEuNfrP25J4eyXMWFy2iAgnWGs9uVYGYFQojU4mgoFC_j0Aa2lYJavBILrPUXnFBQ5MAczSrXejgvduHGDEur-RsaZUNqcPo8EVkU6ncpNSbLYpBLujQGfOODaNqij7VfvAB8uew0j53yGJLteB-wWwU0VWG56fh8uJTUqgznPcUOGbSsKgtBtU_Irsqqcd-HbxxyQsfH04ZcVtVCFvDG8" />
-              </div>
-              <span className="font-pixel text-[10px] text-cyan-900 text-center font-bold tracking-tight mt-3 break-words w-full leading-normal">7 Day Streak</span>
-            </div>
+              if (unlockedBadges.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center p-6 text-center w-full bg-slate-50/50 border-2 border-dashed border-slate-300 rounded-lg">
+                    <span className="text-3xl mb-1 select-none animate-bounce">🏆</span>
+                    <p className="font-pixel text-[9px] text-slate-700 font-bold mb-1">NO BADGES UNLOCKED YET</p>
+                    <p className="text-[10px] text-slate-500 max-w-[240px] mb-3.5 leading-normal">
+                      Complete daily habits and tackle Mystery Missions to fill your Badges Locker!
+                    </p>
+                    <button
+                      onClick={() => { playSound('click'); navigate('/profile'); }}
+                      className="px-3.5 py-1.5 bg-pastel-pink pixel-border text-slate-800 text-[8px] font-pixel font-bold hover:bg-pastel-yellow transition-all"
+                    >
+                      GO TO PROFILE
+                    </button>
+                  </div>
+                );
+              }
 
-            {/* First Blood Badge */}
-            <div className="flex flex-col items-center w-24 relative group cursor-pointer">
-              {/* Tooltip */}
-              <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center w-48 p-3 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-lg shadow-2xl text-center z-50 pointer-events-none transition-all">
-                <span className="font-pixel text-[8px] text-pastel-pink mb-1 font-bold tracking-wider">FIRST BLOOD</span>
-                <span className="text-[7px] font-pixel text-slate-400 mb-2 uppercase tracking-wide">Common Achievement</span>
-                <p className="text-[10px] text-slate-200 leading-relaxed font-medium">Earned by successfully completing your very first quest.</p>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900/95"></div>
-              </div>
+              return unlockedBadges.slice(0, 3).map((b) => {
+                const isEpic = b.rarity === 'epic';
+                const isLegendary = b.rarity === 'legendary';
+                const isRare = b.rarity === 'rare';
+                
+                let textClass = 'text-pastel-cyan';
+                if (isEpic) textClass = 'text-pastel-purple';
+                else if (isLegendary) textClass = 'text-yellow-400';
+                else if (isRare) textClass = 'text-cyan-400';
 
-              {/* Badge Icon Box */}
-              <div className="w-20 h-20 bg-white border-2 border-pastel-pink rounded-xl flex items-center justify-center p-3 shadow-sm hover:border-pastel-pink hover:shadow-md transition-all duration-300 transform hover:scale-105">
-                <img alt="Badge 3" className="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwMhPLbsNBqQFHgDRrfPJkBj4Dp2Jei9NnyW8NHcBiF7NaOvkuCK4tCbqgMxemIdESHLQEw-0B6zrzQMcgftBXoXcODBPa9mWsG6ZwQhI3p_3RUmm9F6n7VBJMVs9pQVr17dKijspk04WxjjBaxRfhOWjPEiTVtcNZCYAP2-hN8QmlEfLg2s31RTugG3FZI3zLK2c4a8XS2RnT6o7S2feK8aSjUIt0BsNgP1YyNg0-AYVCxihaUp5j4lkaWRtv38dNy7IiLysHOGk" />
-              </div>
-              <span className="font-pixel text-[10px] text-rose-900 text-center font-bold tracking-tight mt-3 break-words w-full leading-normal">First Blood</span>
-            </div>
+                let borderClass = 'border-pastel-cyan';
+                if (isEpic) borderClass = 'border-pastel-purple';
+                else if (isLegendary) borderClass = 'border-yellow-500 shadow-[0_0_8px_#eab308]';
+                else if (isRare) borderClass = 'border-cyan-400';
+
+                let nameClass = 'text-cyan-900';
+                if (isEpic) nameClass = 'text-purple-900';
+                else if (isLegendary) nameClass = 'text-amber-900';
+                else if (isRare) nameClass = 'text-teal-900';
+
+                return (
+                  <div key={b.id} className="flex flex-col items-center w-24 relative group cursor-pointer">
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center w-48 p-3 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-lg shadow-2xl text-center z-50 pointer-events-none transition-all">
+                      <span className={`font-pixel text-[8px] ${textClass} mb-1 font-bold tracking-wider`}>
+                        {b.name.toUpperCase()}
+                      </span>
+                      <span className="text-[7px] font-pixel text-slate-400 mb-2 uppercase tracking-wide">
+                        {b.rarity} Achievement
+                      </span>
+                      <p className="text-[10px] text-slate-200 leading-relaxed font-medium">
+                        {b.description}
+                      </p>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900/95"></div>
+                    </div>
+
+                    {/* Badge Icon Box */}
+                    <div className={`w-20 h-20 bg-white border-2 ${borderClass} rounded-xl flex items-center justify-center p-3 shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105`}>
+                      <span className="text-3xl select-none leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">{b.icon}</span>
+                    </div>
+                    <span className={`font-pixel text-[10px] ${nameClass} text-center font-bold tracking-tight mt-3 break-words w-full leading-normal`}>
+                      {b.name}
+                    </span>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </section>
 
@@ -807,51 +959,86 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-
-            <div
-              onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
-              className="flex items-center justify-between bg-white p-4 border-2 border-slate-800 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-cyan)] hover:-translate-y-1 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="bg-white p-2 rounded relative overflow-hidden group-hover:scale-110 transition-transform">
-                  <div className="absolute inset-0 bg-pastel-cyan/20 blur"></div>
-                  <img alt="Python Logo" className="w-8 h-8 relative z-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArfFALn5dWrwM_nbqci6htaa0RqRfRjD1-Zk848xT8DmHjgZttPtJWcFj7QNrW2RKqJzvKtKC3ssqnV1A1xj8q3lMWgR6lkWU28V3pIRD6ZkQgX3ToASsIZwRhGGALne94k6CX-0pubpVptpBSf6FdPTP49QlBwBdy-mwlv6wijKSEvEDCfPCVELO97h6FEGQKvNgba4ExvudAb6r-MOREKYL9uX2cKmIjrA5Ta-ZYKZJcTXnLfoywdoQTXIs4ko54PhuFUQ0QEvc" />
-                </div>
-                <div>
-                  <p className="text-slate-800 font-bold text-sm tracking-wide group-hover:text-pastel-cyan transition-colors">Python Basics</p>
-                  <p className="text-xs text-slate-500 font-medium">In demand by 3 users</p>
-                </div>
+            {skillsLoading ? (
+              <div className="flex flex-col items-center justify-center p-6 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pastel-cyan"></div>
+                <p className="font-pixel text-[8px] text-slate-500 mt-2">LOADING QUESTS...</p>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); playSound('click'); navigate('/skill-exchange'); }}
-                className="px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] group-hover:border-pastel-cyan group-hover:text-pastel-cyan transition-colors"
-              >
-                TEACH
-              </button>
-            </div>
-
-            <div
-              onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
-              className="flex items-center justify-between bg-white p-4 border-2 border-slate-800 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)] hover:-translate-y-1 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="bg-white p-2 rounded relative overflow-hidden group-hover:scale-110 transition-transform">
-                  <div className="absolute inset-0 bg-pastel-pink/20 blur"></div>
-                  <img alt="React Logo" className="w-8 h-8 relative z-10" src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" />
-                </div>
-                <div>
-                  <p className="text-slate-800 font-bold text-sm tracking-wide group-hover:text-rose-500 transition-colors">React Hook Mastery</p>
-                  <p className="text-xs text-slate-500 font-medium">Requested by you</p>
-                </div>
+            ) : skills.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-slate-300 bg-slate-50/50 rounded-lg">
+                <span className="text-3xl mb-2 select-none">💡</span>
+                <p className="font-pixel text-[9px] text-slate-700 font-bold mb-1">NO ACTIVE SIDE QUESTS</p>
+                <p className="text-[10px] text-slate-500 max-w-[200px] mb-3 leading-normal">
+                  Visit the Skill Exchange to post a skill or request help!
+                </p>
+                <button
+                  onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
+                  className="px-3.5 py-1.5 bg-[#A0C4FF] pixel-border text-slate-800 text-[8px] font-pixel font-bold hover:bg-pastel-yellow transition-all"
+                >
+                  VISIT MARKETPLACE
+                </button>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); playSound('click'); navigate('/skill-exchange'); }}
-                className="px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] group-hover:border-rose-500 group-hover:text-rose-500 transition-colors"
-              >
-                FIND
-              </button>
-            </div>
+            ) : (
+              skills.slice(0, 3).map((q) => {
+                const info = getSkillLogoInfo(q.skill);
+                const isOwnSkill = q.userId === currentUser?.id || q.postedBy === currentUser?.username;
+                const cardBorder = q.type === 'offer' 
+                  ? 'hover:shadow-[4px_4px_0px_theme(colors.pastel-cyan)]' 
+                  : 'hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]';
+                
+                // Define nice tag / action button
+                let actionBtnText = q.type === 'offer' ? 'TEACH' : 'FIND';
+                if (q.accepted) {
+                  actionBtnText = 'MATCHED';
+                }
 
+                let statusText = '';
+                if (isOwnSkill) {
+                  statusText = q.type === 'offer' ? 'Offered by you' : 'Requested by you';
+                } else {
+                  statusText = q.type === 'offer' ? `Offered by ${q.postedBy}` : `Requested by ${q.postedBy}`;
+                }
+
+                return (
+                  <div
+                    key={q.id}
+                    onClick={() => { playSound('click'); navigate('/skill-exchange'); }}
+                    className={`flex items-center justify-between bg-white p-4 border-2 border-slate-800 shadow-[2px_2px_0px_#334155] ${info.borderClass || cardBorder} hover:-translate-y-1 transition-all group cursor-pointer`}
+                  >
+                    <div className="flex items-center gap-4 min-w-0 flex-1 mr-2">
+                      <div className={`${info.bgClass} p-2 rounded relative overflow-hidden group-hover:scale-110 transition-transform shrink-0 w-12 h-12 flex items-center justify-center`}>
+                        <div className="absolute inset-0 opacity-20 blur"></div>
+                        {info.src ? (
+                          <img alt={`${q.skill} Logo`} className="w-8 h-8 relative z-10 object-contain" src={info.src} />
+                        ) : (
+                          <span className="text-2xl relative z-10 select-none leading-none flex items-center justify-center">{info.isEmoji}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-slate-800 font-bold text-sm tracking-wide ${info.textColor} transition-colors truncate`}>
+                          {q.skill}
+                        </p>
+                        <p className="text-xs text-slate-500 font-medium truncate">
+                          {statusText}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); playSound('click'); navigate('/skill-exchange'); }}
+                      className={`px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] shrink-0 transition-colors ${
+                        q.accepted
+                          ? 'border-emerald-500 text-emerald-500 bg-emerald-50'
+                          : q.type === 'offer'
+                            ? 'group-hover:border-pastel-cyan group-hover:text-pastel-cyan'
+                            : 'group-hover:border-pastel-pink group-hover:text-pastel-pink'
+                      }`}
+                    >
+                      {actionBtnText}
+                    </button>
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
       </div>

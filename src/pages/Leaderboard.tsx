@@ -60,7 +60,7 @@ export default function Leaderboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200/50 pb-4">
         <div>
-          <h1 className="text-pastel-cyan font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_8px_rgba(14,116,144,0.6)]">LEADERBOARD</h1>
+          <h1 className="font-bold text-2xl font-pixel mb-3 text-[#5c4257] drop-shadow-[0_0_6px_rgba(92,66,87,0.25)]">LEADERBOARD</h1>
           <p className="text-slate-500 text-sm">Rise through the ranks. Compete. Conquer.</p>
         </div>
         <div className="flex gap-2 mt-4 md:mt-0 p-1 bg-white border border-slate-200 rounded-md">

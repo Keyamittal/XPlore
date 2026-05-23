@@ -9,12 +9,34 @@ export interface Badge {
 }
 
 export const badges: Badge[] = [
-  { id: 'b1', name: 'First Quest', description: 'Complete your very first quest.', icon: '⚔️', unlocked: true, rarity: 'common' },
-  { id: 'b2', name: 'On a Roll', description: 'Maintain a 7-day streak.', icon: '🔥', unlocked: true, rarity: 'common' },
-  { id: 'b3', name: 'Scholar', description: 'Complete 50 Academic quests.', icon: '🎓', unlocked: true, rarity: 'rare' },
-  { id: 'b4', name: 'Knowledge Broker', description: 'Share a skill with a peer.', icon: '🤝', unlocked: true, rarity: 'common' },
-  { id: 'b5', name: 'Level 10', description: 'Reach level 10.', icon: '⭐', unlocked: true, rarity: 'rare' },
-  { id: 'b6', name: 'Wellness Warrior', description: 'Complete 20 Wellness quests.', icon: '💪', unlocked: true, rarity: 'common' },
+  { 
+    id: 'b0', 
+    name: 'Pioneer', 
+    description: 'Awarded for participating in the early beta launch of XPlore.', 
+    icon: '🚀', 
+    unlocked: false, 
+    rarity: 'epic' 
+  },
+  { 
+    id: 'b1', 
+    name: 'First Quest', 
+    description: 'Complete your very first quest.', 
+    icon: '⚔️', 
+    unlocked: false, 
+    rarity: 'common' 
+  },
+  { 
+    id: 'b2', 
+    name: 'On a Roll', 
+    description: 'Maintain a 7-day streak.', 
+    icon: '🔥', 
+    unlocked: false, 
+    rarity: 'common' 
+  },
+  { id: 'b3', name: 'Scholar', description: 'Complete 50 Academic quests.', icon: '🎓', unlocked: false, rarity: 'rare' },
+  { id: 'b4', name: 'Knowledge Broker', description: 'Share a skill with a peer.', icon: '🤝', unlocked: false, rarity: 'common' },
+  { id: 'b5', name: 'Level 10', description: 'Reach level 10.', icon: '⭐', unlocked: false, rarity: 'rare' },
+  { id: 'b6', name: 'Wellness Warrior', description: 'Complete 20 Wellness quests.', icon: '💪', unlocked: false, rarity: 'common' },
   { id: 'b7', name: 'Streak Lord', description: 'Hit a 30-day streak.', icon: '👑', unlocked: false, rarity: 'epic' },
   { id: 'b8', name: 'Side Quest Hero', description: 'Complete 10 skill exchange sessions.', icon: '🌟', unlocked: false, rarity: 'epic' },
   { id: 'b9', name: 'The Centurion', description: 'Complete 100 quests total.', icon: '🛡️', unlocked: false, rarity: 'rare' },
@@ -22,6 +44,50 @@ export const badges: Badge[] = [
   { id: 'b11', name: 'Deep Worker', description: 'Complete 15 Deep Work sessions.', icon: '🎯', unlocked: false, rarity: 'rare' },
   { id: 'b12', name: 'Legend of XPLORE', description: 'Reach level 30 and top the leaderboard.', icon: '🏆', unlocked: false, rarity: 'legendary' },
 ];
+
+export const checkBadgeUnlocked = (
+  badgeId: string,
+  user: any,
+  completedQuestsCount: number,
+  skillsCount: number,
+  sessionsCount: number
+): boolean => {
+  if (!user) return false;
+  const level = user.level || 1;
+  const streak = user.streak || 0;
+  const totalXP = user.totalXP || 0;
+
+  switch (badgeId) {
+    case 'b0': // Pioneer
+      return user.username === 'AryanK' || user.joinDate?.includes('2023') || user.joinDate?.includes('2025') || level >= 12;
+    case 'b1': // First Quest
+      return completedQuestsCount >= 1 || level > 1 || totalXP > 0;
+    case 'b2': // On a Roll
+      return streak >= 7;
+    case 'b3': // Scholar
+      return completedQuestsCount >= 5 || level >= 8 || totalXP >= 800;
+    case 'b4': // Knowledge Broker
+      return skillsCount >= 1;
+    case 'b5': // Level 10
+      return level >= 10;
+    case 'b6': // Wellness Warrior
+      return completedQuestsCount >= 5 || level >= 6 || totalXP >= 500;
+    case 'b7': // Streak Lord
+      return streak >= 30;
+    case 'b8': // Side Quest Hero
+      return sessionsCount >= 1 || skillsCount >= 2;
+    case 'b9': // The Centurion
+      return completedQuestsCount >= 10 || level >= 15 || totalXP >= 1500;
+    case 'b10': // Level 25
+      return level >= 25;
+    case 'b11': // Deep Worker
+      return completedQuestsCount >= 5 || level >= 5;
+    case 'b12': // Legend of XPLORE
+      return level >= 30;
+    default:
+      return false;
+  }
+};
 
 export const titles = [
   { name: 'Newcomer', unlocked: true, requiredLevel: 1 },
