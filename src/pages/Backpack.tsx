@@ -148,7 +148,7 @@ export default function Backpack() {
           onClick={() => { playSound('click'); setActiveTab('backpack'); }}
           className={`px-6 py-3 font-pixel text-[10px] font-bold border-t-4 border-x-4 border-slate-800 transition-all select-none whitespace-nowrap ${
             activeTab === 'backpack'
-              ? 'bg-pastel-pink text-slate-800 border-b-4 border-b-pastel-pink translate-y-[4px]'
+              ? 'bg-[#F8B7C1] text-slate-800 border-b-4 border-b-[#F8B7C1] translate-y-[4px]'
               : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border-b-0 translate-y-0 shadow-[inset_0_-8px_8px_rgba(0,0,0,0.05)]'
           }`}
         >
@@ -218,7 +218,7 @@ export default function Backpack() {
                   className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all ${
                     isZero
                       ? 'bg-slate-100 text-slate-400 border-slate-400 shadow-none cursor-not-allowed opacity-50'
-                      : 'bg-pastel-pink text-slate-800 hover:bg-pastel-yellow hover:translate-y-[-1px] cursor-pointer'
+                      : 'bg-[#F8B7C1] text-slate-800 hover:bg-pastel-yellow hover:translate-y-[-1px] cursor-pointer'
                   }`}
                 >
                   {isZero ? 'OUT OF STOCK' : `CONSUME / USE ${item.name.toUpperCase()}`}
@@ -267,7 +267,7 @@ export default function Backpack() {
                   onClick={() => handlePurchase(item.id, item.name, item.price)}
                   className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all flex items-center justify-center gap-2 ${
                     canAfford
-                      ? 'bg-pastel-yellow text-slate-800 hover:bg-pastel-pink hover:translate-y-[-1px] cursor-pointer'
+                      ? 'bg-pastel-yellow text-slate-800 hover:bg-[#F8B7C1] hover:translate-y-[-1px] cursor-pointer'
                       : 'bg-rose-50 text-rose-500 border-rose-300 shadow-none cursor-not-allowed hover:bg-rose-100'
                   }`}
                 >

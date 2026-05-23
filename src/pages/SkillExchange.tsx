@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Zap, Clock, Plus, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 
@@ -15,29 +15,276 @@ export interface SkillOffer {
   duration: string;
   bonusXp: number;
   accepted: boolean;
+  email?: string;
+  phone?: string;
 }
 
-const initialSkills: SkillOffer[] = [
-  { id: 'sk1', type: 'offer', skill: 'Python Basics', description: 'I can teach you Python fundamentals.', tags: ['Code', 'Beginner'], postedBy: 'Sana T.', initials: 'ST', duration: '1 hr', bonusXp: 10, accepted: false },
-  { id: 'sk2', type: 'request', skill: 'React Hook Mastery', description: 'Need help understanding complex Hooks.', tags: ['React', 'Frontend'], postedBy: 'Karan B.', initials: 'KB', duration: '30 min', bonusXp: 10, accepted: false },
-  { id: 'sk3', type: 'offer', skill: 'Vector Math Tutors', description: 'Explaining matrices and dot products.', tags: ['Math', 'Advanced'], postedBy: 'Dev P.', initials: 'DP', duration: '45 min', bonusXp: 10, accepted: false },
+export interface ScheduledSession {
+  id: string;
+  skillId: string;
+  skillName: string;
+  partnerName: string;
+  date: string;
+  time: string;
+  venue: string;
+}
+
+const allSkillsPool: SkillOffer[] = [
+  { id: 'sk1', type: 'offer', skill: 'Python Basics', description: 'I can teach you Python fundamentals.', tags: ['Code', 'Beginner'], postedBy: 'Sana T.', initials: 'ST', duration: '1 hr', bonusXp: 10, accepted: false, email: 'sana.t@xplore.edu', phone: '+1 (555) 019-2831' },
+  { id: 'sk2', type: 'request', skill: 'React Hook Mastery', description: 'Need help understanding complex Hooks.', tags: ['React', 'Frontend'], postedBy: 'Karan B.', initials: 'KB', duration: '30 min', bonusXp: 10, accepted: false, email: 'karan.b@xplore.edu', phone: '+1 (555) 014-9928' },
+  { id: 'sk3', type: 'offer', skill: 'Vector Math Tutors', description: 'Explaining matrices and dot products.', tags: ['Math', 'Advanced'], postedBy: 'Dev P.', initials: 'DP', duration: '45 min', bonusXp: 10, accepted: false, email: 'dev.p@xplore.edu', phone: '+1 (555) 017-3829' },
+  { id: 'sk4', type: 'offer', skill: 'UI/UX Design Intro', description: 'Let\'s learn wireframing and color theory.', tags: ['Design', 'UX'], postedBy: 'Alice L.', initials: 'AL', duration: '1.5 hr', bonusXp: 15, accepted: false, email: 'alice.l@xplore.edu', phone: '+1 (555) 011-8849' },
+  { id: 'sk5', type: 'request', skill: 'SQL & Databases', description: 'Looking to master joins and SQL subqueries.', tags: ['Data', 'Backend'], postedBy: 'Mike R.', initials: 'MR', duration: '1 hr', bonusXp: 10, accepted: false, email: 'mike.r@xplore.edu', phone: '+1 (555) 013-8831' },
+  { id: 'sk6', type: 'offer', skill: 'Git & GitHub Basics', description: 'I can teach you branching and merge conflict resolution.', tags: ['Tools', 'Git'], postedBy: 'John H.', initials: 'JH', duration: '45 min', bonusXp: 10, accepted: false, email: 'john.h@xplore.edu', phone: '+1 (555) 015-8822' },
+  { id: 'sk7', type: 'request', skill: 'TypeScript Advanced', description: 'Need help with utility types and generics.', tags: ['TS', 'Code'], postedBy: 'Emma L.', initials: 'EL', duration: '1.5 hr', bonusXp: 20, accepted: false, email: 'emma.l@xplore.edu', phone: '+1 (555) 018-9321' },
+  { id: 'sk8', type: 'offer', skill: 'CSS Flexbox & Grid', description: 'Mastering modern page layouts step-by-step.', tags: ['CSS', 'Frontend'], postedBy: 'Olivia S.', initials: 'OS', duration: '30 min', bonusXp: 10, accepted: false, email: 'olivia.s@xplore.edu', phone: '+1 (555) 012-3841' },
+  { id: 'sk9', type: 'request', skill: 'Docker Containerization', description: 'Need to set up multi-container local environments.', tags: ['DevOps', 'Docker'], postedBy: 'David K.', initials: 'DK', duration: '1 hr', bonusXp: 15, accepted: false, email: 'david.k@xplore.edu', phone: '+1 (555) 016-3918' },
+  { id: 'sk10', type: 'offer', skill: 'Figma Prototyping', description: 'Interactive states, variants, and design systems.', tags: ['Design', 'Figma'], postedBy: 'Chloe N.', initials: 'CN', duration: '1 hr', bonusXp: 10, accepted: false, email: 'chloe.n@xplore.edu', phone: '+1 (555) 010-8432' },
+  { id: 'sk11', type: 'request', skill: 'Data Structures', description: 'Studying binary search trees and heap sorts.', tags: ['CS', 'Math'], postedBy: 'Ryan A.', initials: 'RA', duration: '2 hr', bonusXp: 25, accepted: false, email: 'ryan.a@xplore.edu', phone: '+1 (555) 019-9431' },
+  { id: 'sk12', type: 'offer', skill: 'Rust Fundamentals', description: 'Ownership, borrowing, and lifetime mechanics.', tags: ['Rust', 'Systems'], postedBy: 'Tyler L.', initials: 'TL', duration: '1.5 hr', bonusXp: 20, accepted: false, email: 'tyler.l@xplore.edu', phone: '+1 (555) 011-3829' },
 ];
 
+const getDailySkills = (): SkillOffer[] => {
+  const day = new Date().getDate();
+  const index1 = (day * 3) % allSkillsPool.length;
+  const index2 = (day * 7 + 1) % allSkillsPool.length;
+  const index3 = (day * 11 + 2) % allSkillsPool.length;
+
+  const selectedIndices = Array.from(new Set([index1, index2, index3]));
+  while (selectedIndices.length < 3) {
+    const nextIdx = (selectedIndices[selectedIndices.length - 1] + 1) % allSkillsPool.length;
+    selectedIndices.push(nextIdx);
+  }
+
+  return selectedIndices.map(idx => ({ ...allSkillsPool[idx] }));
+};
+
+const getRandomSkills = (count: number): SkillOffer[] => {
+  const shuffled = [...allSkillsPool].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count).map(s => ({ ...s }));
+};
+
 export default function SkillExchange() {
-  const { addXpDirectly } = useGame();
-  const [quests, setQuests] = useState<SkillOffer[]>(initialSkills);
-  const [filter, setFilter] = useState<SkillOfferType | 'all'>('all');
+  const { addXpDirectly, user: currentUser, gold, addGoldDirectly } = useGame();
+  
+  const [dailySkills, setDailySkills] = useState<SkillOffer[]>([]);
+  const [userSkills, setUserSkills] = useState<SkillOffer[]>([]);
+  const [filter, setFilter] = useState<SkillOfferType | 'all' | 'matched'>('all');
   const [showModal, setShowModal] = useState(false);
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
+  
+  // Form states
+  const [skillType, setSkillType] = useState<SkillOfferType>('offer');
+  const [skillName, setSkillName] = useState('');
+  const [skillDesc, setSkillDesc] = useState('');
+  const [skillDur, setSkillDur] = useState('1 hr');
+  const [skillTags, setSkillTags] = useState('');
+  const [skillEmail, setSkillEmail] = useState('');
+  const [skillPhone, setSkillPhone] = useState('');
 
-  const handleAccept = async (id: string, bonusXp: number) => {
-    await addXpDirectly(bonusXp);
-    setQuests(p => p.map(q => q.id === id ? { ...q, accepted: true } : q));
-    setAccepted(p => ({ ...p, [id]: true }));
-    setTimeout(() => setAccepted(p => ({ ...p, [id]: false })), 2000);
+  // Scheduling states
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedQuestForSchedule, setSelectedQuestForSchedule] = useState<SkillOffer | null>(null);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleVenue, setScheduleVenue] = useState('Virtual Discord Server');
+  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([]);
+  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Core Sync Function connecting directly to the SQLite shared backend
+  const fetchSkillsAndSessions = async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+    try {
+      // 1. Fetch skills from database
+      const skillsRes = await fetch('http://localhost:3000/api/skills');
+      const skillsData = await skillsRes.json();
+      if (!skillsRes.ok) throw new Error(skillsData.error || 'Failed to load skills');
+
+      const allSkills: SkillOffer[] = skillsData.skills;
+
+      // 2. Separate system presets (user_id IS NULL) and user-posted skills (user_id IS NOT NULL)
+      const systemPresets = allSkills.filter(s => !(s as any).user_id);
+      const userPosted = allSkills.filter(s => (s as any).user_id);
+
+      // Apply the daily deterministic rotation to system presets on the client so it changes every 24h
+      const day = new Date().getDate();
+      const index1 = (day * 3) % systemPresets.length;
+      const index2 = (day * 7 + 1) % systemPresets.length;
+      const index3 = (day * 11 + 2) % systemPresets.length;
+
+      const selectedIndices = Array.from(new Set([index1, index2, index3]));
+      while (selectedIndices.length < 3 && systemPresets.length > 0) {
+        const nextIdx = (selectedIndices[selectedIndices.length - 1] + 1) % systemPresets.length;
+        selectedIndices.push(nextIdx);
+      }
+
+      const selectedDailySystem = selectedIndices
+        .filter(idx => systemPresets[idx])
+        .map(idx => ({ ...systemPresets[idx] }));
+
+      // 3. Set active skills (system presets slice + all user posted skills)
+      setDailySkills(selectedDailySystem);
+      setUserSkills(userPosted);
+
+      // 4. Fetch scheduled sessions from database
+      const sessionsRes = await fetch(`http://localhost:3000/api/sessions/${currentUser.id}`);
+      const sessionsData = await sessionsRes.json();
+      if (sessionsRes.ok) {
+        setScheduledSessions(sessionsData.sessions);
+      }
+    } catch (err: any) {
+      console.error("DB Load Error:", err);
+      setError(err.message || 'Network error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filtered = filter === 'all' ? quests : quests.filter(q => q.type === filter);
+  useEffect(() => {
+    fetchSkillsAndSessions();
+  }, [currentUser]);
+
+  const handleAccept = async (id: string, bonusXp: number) => {
+    if (!currentUser?.id) return;
+    
+    const skill = [...dailySkills, ...userSkills].find(s => s.id === id);
+    if (skill && (skill.userId === currentUser.id || (skill as any).user_id === currentUser.id || skill.postedBy === currentUser.username)) {
+      alert("You cannot accept your own post!");
+      return;
+    }
+    
+    try {
+      // 1. Mark accepted in the shared database
+      const res = await fetch('http://localhost:3000/api/skills/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, userId: currentUser.id })
+      });
+      if (!res.ok) throw new Error("Failed to accept match in database");
+
+      // 2. Add XP
+      await addXpDirectly(bonusXp);
+
+      // 3. Trigger full sync from database to get fresh state!
+      await fetchSkillsAndSessions();
+
+      setAccepted(p => ({ ...p, [id]: true }));
+      setTimeout(() => setAccepted(p => ({ ...p, [id]: false })), 2000);
+    } catch (err: any) {
+      console.error("Match Acceptance Error:", err);
+      alert(err.message || "Failed to secure match.");
+    }
+  };
+
+  const handleScheduleClick = (q: SkillOffer) => {
+    setSelectedQuestForSchedule(q);
+    setShowScheduleModal(true);
+  };
+
+  const handleConfirmSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser?.id || !selectedQuestForSchedule) return;
+
+    const payload = {
+      id: `sess_${Date.now()}`,
+      skillId: selectedQuestForSchedule.id,
+      skillName: selectedQuestForSchedule.skill,
+      partnerName: selectedQuestForSchedule.postedBy,
+      date: scheduleDate,
+      time: scheduleTime,
+      venue: scheduleVenue,
+      userId: currentUser.id
+    };
+
+    try {
+      const res = await fetch('http://localhost:3000/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to lock session in database");
+
+      // Success visual feedback
+      setScheduleSuccess(`✓ SESSION LOCKED! Invite dispatched to ${selectedQuestForSchedule.email || 'partner'}!`);
+      setTimeout(() => setScheduleSuccess(null), 4000);
+
+      // Re-fetch sessions from DB
+      await fetchSkillsAndSessions();
+
+      // Reset inputs
+      setScheduleDate('');
+      setScheduleTime('');
+      setScheduleVenue('Virtual Discord Server');
+      setShowScheduleModal(false);
+      setSelectedQuestForSchedule(null);
+    } catch (err: any) {
+      console.error("Schedule Error:", err);
+      alert(err.message || 'Failed to schedule study session.');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser?.id) return;
+
+    const parsedTags = skillTags
+      ? skillTags.split(',').map(t => t.trim()).filter(Boolean)
+      : ['Custom'];
+
+    const newSkillId = `sk_user_${Date.now()}`;
+    const payload = {
+      id: newSkillId,
+      type: skillType,
+      skill: skillName,
+      description: skillDesc,
+      tags: parsedTags,
+      postedBy: currentUser.username || 'You',
+      initials: currentUser.username ? currentUser.username.substring(0, 2).toUpperCase() : 'YO',
+      duration: skillDur || '1 hr',
+      bonusXp: 15,
+      email: skillEmail || `${currentUser.username || 'user'}@xplore.edu`,
+      phone: skillPhone || '+1 (555) 000-0000',
+      userId: currentUser.id
+    };
+
+    try {
+      const res = await fetch('http://localhost:3000/api/skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to post skill');
+
+      // Refresh board skills
+      await fetchSkillsAndSessions();
+
+      // Reset Form Fields
+      setSkillType('offer');
+      setSkillName('');
+      setSkillDesc('');
+      setSkillDur('1 hr');
+      setSkillTags('');
+      setSkillEmail('');
+      setSkillPhone('');
+      setShowModal(false);
+    } catch (err: any) {
+      console.error("Submit Skill Error:", err);
+      alert(err.message || 'Failed to submit skill exchange.');
+    }
+  };
+
+  const quests = [...userSkills, ...dailySkills];
+  const filtered = filter === 'all'
+    ? quests
+    : filter === 'matched'
+      ? quests.filter(q => q.accepted)
+      : quests.filter(q => q.type === filter);
+
   const offers = quests.filter(q => q.type === 'offer').length;
   const requests = quests.filter(q => q.type === 'request').length;
 
@@ -49,13 +296,21 @@ export default function SkillExchange() {
           <h1 className="text-pastel-cyan font-bold text-2xl font-pixel mb-3 drop-shadow-[0_0_8px_rgba(14,116,144,0.6)]">SKILL EXCHANGE</h1>
           <p className="text-slate-500 text-sm">Teach what you know. Learn what you don't. Earn bonus XP.</p>
         </div>
-        <button 
-          className="mt-4 md:mt-0 font-pixel text-[10px] px-5 py-3 bg-pastel-cyan text-slate-800 border border-pastel-cyan hover:bg-transparent hover:text-pastel-cyan font-bold rounded shadow-[0_0_15px_rgba(14,116,144,0.4)] hover:shadow-[0_0_20px_rgba(14,116,144,0.25)_inset] transition-all flex items-center gap-2"
-          onClick={() => setShowModal(true)}
-        >
-          <Plus size={14} /> POST SKILL
-        </button>
+        <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+          <button 
+            className="font-pixel text-[10px] px-5 py-3 bg-pastel-cyan text-slate-800 border border-pastel-cyan hover:bg-transparent hover:text-pastel-cyan font-bold rounded shadow-[0_0_15px_rgba(14,116,144,0.4)] hover:shadow-[0_0_20px_rgba(14,116,144,0.25)_inset] transition-all flex items-center gap-2"
+            onClick={() => setShowModal(true)}
+          >
+            <Plus size={14} /> POST SKILL
+          </button>
+        </div>
       </div>
+
+      {scheduleSuccess && (
+        <div className="font-pixel text-[9px] text-[#006064] bg-cyan-100 border border-cyan-300 px-4 py-2.5 rounded shadow-[0_0_10px_rgba(34,211,238,0.2)] animate-pulse flex items-center justify-center">
+          {scheduleSuccess}
+        </div>
+      )}
 
       {/* Stats Panel */}
       <div className="panel-border-cyan p-6 flex flex-col md:flex-row justify-around items-center gap-6 bg-white/40">
@@ -70,14 +325,14 @@ export default function SkillExchange() {
         </div>
         <div className="hidden md:block w-px h-12 bg-gray-700" />
         <div className="flex flex-col items-center">
-          <span className="font-pixel text-2xl text-pastel-pink drop-shadow-[0_0_8px_#ff00ff] mb-1">+220</span>
+          <span className="font-pixel text-2xl text-pastel-purple mb-1">+220</span>
           <span className="font-pixel text-[8px] text-slate-500">MAX BONUS XP</span>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-2">
-        {(['all', 'offer', 'request'] as const).map(f => (
+        {(['all', 'offer', 'request', 'matched'] as const).map(f => (
           <button
             key={f}
             className={`font-pixel text-[10px] px-5 py-2.5 rounded border transition-all duration-200 ${
@@ -87,7 +342,7 @@ export default function SkillExchange() {
             }`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'ALL' : f === 'offer' ? 'OFFERS' : 'REQUESTS'}
+            {f === 'all' ? 'ALL' : f === 'offer' ? 'OFFERS' : f === 'request' ? 'REQUESTS' : '🤝 MY MATCHES'}
           </button>
         ))}
       </div>
@@ -99,7 +354,7 @@ export default function SkillExchange() {
             key={q.id}
             className={`p-5 flex flex-col gap-3 transition-all duration-300 relative ${
               q.type === 'offer' ? 'panel-border-cyan' : 'panel-border-pink'
-            } ${q.accepted ? 'opacity-50 grayscale bg-white/80 shadow-none' : 'hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)_inset]'}`}
+            } ${q.accepted ? 'opacity-90 bg-white/80 shadow-none' : 'hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)_inset]'}`}
           >
             {accepted[q.id] && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10 rounded-lg">
@@ -129,6 +384,24 @@ export default function SkillExchange() {
               ))}
             </div>
 
+            {/* Locked Contact Block */}
+            {q.accepted && (
+              <div className="mt-2 p-3 bg-slate-900 text-pastel-cyan border border-slate-700 rounded font-mono text-[9px] flex flex-col gap-1.5 animate-[fade-in_0.3s_ease-out]">
+                <div className="text-pastel-pink font-bold border-b border-slate-800 pb-1 flex justify-between items-center font-pixel">
+                  <span>⚡ CONTACT INFORMATION</span>
+                  <span className="text-[7px] font-mono text-slate-400">ID: {q.id}</span>
+                </div>
+                <div><span className="text-slate-400">EMAIL:</span> <a href={`mailto:${q.email}`} className="underline hover:text-pastel-pink font-sans text-[10px]">{q.email || 'N/A'}</a></div>
+                <div><span className="text-slate-400">PHONE:</span> <a href={`tel:${q.phone}`} className="underline hover:text-pastel-pink font-sans text-[10px]">{q.phone || 'N/A'}</a></div>
+                <button 
+                  onClick={() => handleScheduleClick(q)}
+                  className="mt-2 w-full py-1 bg-pastel-cyan text-slate-900 border border-pastel-cyan font-pixel text-[8px] hover:bg-transparent hover:text-pastel-cyan transition-all rounded shadow-[0_0_5px_rgba(14,116,144,0.3)]"
+                >
+                  📅 SCHEDULE SESSION
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded bg-white border border-slate-300 flex items-center justify-center font-pixel text-[8px] text-slate-800">
@@ -140,9 +413,16 @@ export default function SkillExchange() {
                 </div>
               </div>
               
-              {q.accepted
-                ? <span className="font-pixel text-[8px] text-slate-500 border border-slate-300 px-2 py-1 rounded">✓ MATCHED</span>
-                : <button
+              {(() => {
+                const isOwnSkill = q.userId === currentUser?.id || (q as any).user_id === currentUser?.id || q.postedBy === currentUser?.username;
+                if (q.accepted) {
+                  return <span className="font-pixel text-[8px] text-slate-500 border border-slate-300 px-2 py-1 rounded">✓ MATCHED</span>;
+                }
+                if (isOwnSkill) {
+                  return <span className="font-pixel text-[8px] text-slate-400 bg-slate-100 border border-slate-200 px-2 py-1 rounded select-none">★ YOUR POST</span>;
+                }
+                return (
+                  <button
                     className={`font-pixel text-[8px] px-3 py-2 rounded transition-all border ${
                       q.type === 'offer' 
                         ? 'bg-pastel-cyan/10 border-pastel-cyan text-pastel-cyan hover:bg-pastel-cyan hover:text-slate-800 hover:shadow-[0_0_10px_rgba(14,116,144,0.4)]' 
@@ -152,11 +432,156 @@ export default function SkillExchange() {
                   >
                     ACCEPT →
                   </button>
-              }
+                );
+              })()}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Scheduled Sessions Timeline */}
+      {scheduledSessions.length > 0 && (
+        <div className="panel-border-pink p-6 bg-white/40 flex flex-col gap-4 animate-[fade-in_0.3s_ease-out] mt-4">
+          <div className="flex items-center justify-between border-b border-pastel-pink/50 pb-3">
+            <h2 className="font-pixel text-xs text-pastel-pink flex items-center gap-2">
+              📅 YOUR LOCKED TEACHING & LEARNING SESSIONS
+            </h2>
+            <span className="font-pixel text-[8px] bg-pastel-pink/20 text-pastel-pink px-2 py-0.5 border border-pastel-pink rounded animate-pulse">
+              {scheduledSessions.length} ACTIVE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {scheduledSessions.map(sess => (
+              <div 
+                key={sess.id}
+                className="bg-slate-900 text-slate-100 p-4 border border-slate-700 rounded-lg flex flex-col gap-2 relative shadow-md"
+              >
+                <button 
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`http://localhost:3000/api/sessions/${sess.id}`, {
+                        method: 'DELETE'
+                      });
+                      if (!res.ok) throw new Error("Failed to cancel session");
+                      await fetchSkillsAndSessions();
+                    } catch (err: any) {
+                      console.error("Cancel Session Error:", err);
+                      alert(err.message || 'Failed to cancel session.');
+                    }
+                  }}
+                  className="absolute top-2 right-2 text-slate-500 hover:text-rose-400 p-1 transition-colors"
+                  title="Cancel Session"
+                >
+                  <X size={14} />
+                </button>
+
+                <div className="font-pixel text-[9px] text-pastel-cyan border-b border-slate-800 pb-1 pr-6 truncate">
+                  {sess.skillName.toUpperCase()}
+                </div>
+
+                <div className="text-[11px] leading-relaxed">
+                  <div>
+                    <span className="text-slate-400 font-bold">Partner:</span>{' '}
+                    <span className="text-pastel-pink font-semibold">{sess.partnerName}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-bold">Date:</span>{' '}
+                    <span>{sess.date}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-bold">Time:</span>{' '}
+                    <span>{sess.time}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 text-pastel-cyan font-pixel text-[8px] bg-slate-800/80 px-2 py-1 border border-slate-700/50 rounded">
+                    📍 {sess.venue.toUpperCase()}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Modal */}
+      {showScheduleModal && selectedQuestForSchedule && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-[fade-in_0.2s_ease-out]" onClick={() => setShowScheduleModal(false)}>
+          <div 
+            className="panel-border-pink bg-white p-8 w-full max-w-sm shadow-[0_0_30px_rgba(248,183,193,0.2)_inset] rounded-xl relative" 
+            onClick={e => e.stopPropagation()}
+            role="dialog" 
+            aria-modal="true"
+          >
+            <div className="flex justify-between items-center mb-6 border-b border-pastel-pink/50 pb-4">
+              <h2 className="font-pixel text-[10px] text-pastel-pink flex items-center gap-1.5">
+                📅 LOCK SESSION
+              </h2>
+              <button 
+                className="text-slate-500 hover:text-slate-800 hover:bg-pastel-yellow p-1 rounded transition-colors" 
+                onClick={() => setShowScheduleModal(false)} 
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mb-4 bg-slate-900 border border-slate-700 p-3 rounded text-[10px] text-slate-300 font-sans flex flex-col gap-1">
+              <div className="font-pixel text-[8px] text-pastel-cyan border-b border-slate-800 pb-1 mb-1">
+                SIDE QUEST TARGET
+              </div>
+              <div><span className="text-slate-500">SKILL:</span> <span className="font-bold text-slate-100">{selectedQuestForSchedule.skill}</span></div>
+              <div><span className="text-slate-500">PARTNER:</span> <span className="font-bold text-pastel-pink">{selectedQuestForSchedule.postedBy}</span></div>
+            </div>
+            
+            <form className="flex flex-col gap-4" onSubmit={handleConfirmSchedule}>
+              <div className="flex flex-col gap-2">
+                <label className="font-pixel text-[8px] text-pastel-cyan" htmlFor="sched-date">SELECT DATE</label>
+                <input 
+                  id="sched-date" 
+                  value={scheduleDate}
+                  onChange={e => setScheduleDate(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-pink focus:outline-none text-[11px]" 
+                  type="date" 
+                  required 
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="font-pixel text-[8px] text-pastel-cyan" htmlFor="sched-time">SELECT TIME</label>
+                <input 
+                  id="sched-time" 
+                  value={scheduleTime}
+                  onChange={e => setScheduleTime(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-pink focus:outline-none text-[11px]" 
+                  type="time" 
+                  required 
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="font-pixel text-[8px] text-pastel-cyan" htmlFor="sched-venue">VENUE / MEETING MODE</label>
+                <select 
+                  id="sched-venue" 
+                  value={scheduleVenue}
+                  onChange={e => setScheduleVenue(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-pink focus:outline-none text-[11px]" 
+                  required
+                >
+                  <option value="Virtual Discord Server">Virtual Discord Server</option>
+                  <option value="Main Library Study Room B">Main Library Study Room B</option>
+                  <option value="Student Center Cyber Cafe">Student Center Cyber Cafe</option>
+                  <option value="Science Hall Lounge">Science Hall Lounge</option>
+                  <option value="Engineering Lab Suite">Engineering Lab Suite</option>
+                </select>
+              </div>
+              
+              <button type="submit" className="mt-6 font-pixel text-[10px] w-full flex items-center justify-center gap-2 bg-pastel-pink text-slate-800 p-3 rounded font-bold hover:bg-pastel-yellow hover:shadow-[0_0_20px_rgba(248,183,193,0.5)] transition-all">
+                📅 LOCK SESSION
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -178,10 +603,16 @@ export default function SkillExchange() {
               </button>
             </div>
             
-            <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); setShowModal(false); }}>
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-2">
                 <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-type">I WANT TO...</label>
-                <select id="skill-type" className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" required>
+                <select 
+                  id="skill-type" 
+                  value={skillType}
+                  onChange={e => setSkillType(e.target.value as SkillOfferType)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" 
+                  required
+                >
                   <option value="offer">Offer a skill (Teach)</option>
                   <option value="request">Request a skill (Learn)</option>
                 </select>
@@ -189,22 +620,80 @@ export default function SkillExchange() {
               
               <div className="flex flex-col gap-2">
                 <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-name-input">SKILL NAME</label>
-                <input id="skill-name-input" className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" type="text" placeholder="e.g., Python Basics..." required />
+                <input 
+                  id="skill-name-input" 
+                  value={skillName}
+                  onChange={e => setSkillName(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" 
+                  type="text" 
+                  placeholder="e.g., Python Basics..." 
+                  required 
+                />
               </div>
               
               <div className="flex flex-col gap-2">
                 <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-desc-input">DESCRIPTION</label>
-                <textarea id="skill-desc-input" className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" rows={3} placeholder="What will you teach or learn?" required />
+                <textarea 
+                  id="skill-desc-input" 
+                  value={skillDesc}
+                  onChange={e => setSkillDesc(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" 
+                  rows={3} 
+                  placeholder="What will you teach or learn?" 
+                  required 
+                />
               </div>
               
               <div className="flex gap-4 w-full">
                 <div className="flex flex-col gap-2 flex-1 min-w-0">
                   <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-dur">DURATION</label>
-                  <input id="skill-dur" className="w-full bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" type="text" placeholder="e.g., 1 hr" />
+                  <input 
+                    id="skill-dur" 
+                    value={skillDur}
+                    onChange={e => setSkillDur(e.target.value)}
+                    className="w-full bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none text-[11px]" 
+                    type="text" 
+                    placeholder="e.g., 1 hr" 
+                  />
                 </div>
                 <div className="flex flex-col gap-2 flex-1 min-w-0">
                   <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-tags-input">TAGS</label>
-                  <input id="skill-tags-input" className="w-full bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none" type="text" placeholder="Coding, Beginner..." />
+                  <input 
+                    id="skill-tags-input" 
+                    value={skillTags}
+                    onChange={e => setSkillTags(e.target.value)}
+                    className="w-full bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none text-[11px]" 
+                    type="text" 
+                    placeholder="Coding, Beginner..." 
+                  />
+                </div>
+              </div>
+
+              {/* Email & Contact Input fields */}
+              <div className="flex gap-4 w-full">
+                <div className="flex flex-col gap-2 flex-1 min-w-0">
+                  <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-email">YOUR EMAIL</label>
+                  <input 
+                    id="skill-email" 
+                    value={skillEmail}
+                    onChange={e => setSkillEmail(e.target.value)}
+                    className="w-full bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none text-[11px]" 
+                    type="email" 
+                    placeholder="e.g. you@xplore.edu"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-2 flex-1 min-w-0">
+                  <label className="font-pixel text-[8px] text-pastel-pink" htmlFor="skill-phone">CONTACT NUMBER</label>
+                  <input 
+                    id="skill-phone" 
+                    value={skillPhone}
+                    onChange={e => setSkillPhone(e.target.value)}
+                    className="w-full bg-white border border-slate-300 text-slate-800 rounded p-2 focus:border-pastel-cyan focus:outline-none text-[11px]" 
+                    type="tel" 
+                    placeholder="e.g. +1 (555) 000-0000"
+                    required
+                  />
                 </div>
               </div>
               

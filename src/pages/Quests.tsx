@@ -66,7 +66,13 @@ export default function Quests() {
           <div className="w-px bg-gray-700" />
           <div className="flex flex-col items-center">
             <span className="text-pastel-pink font-pixel text-[10px] block mb-1">XP EARNED</span>
-            <span className="text-pastel-pink font-bold text-xl drop-shadow-[0_0_5px_#ff00ff]">+{totalXP}</span>
+            <span className={`${
+              totalXP === 0 
+                ? 'text-pastel-purple' 
+                : 'text-pastel-pink drop-shadow-[0_0_5px_#ff00ff]'
+            } font-bold text-xl`}>
+              +{totalXP}
+            </span>
           </div>
         </div>
       </div>

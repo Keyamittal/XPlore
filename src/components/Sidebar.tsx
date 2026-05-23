@@ -51,37 +51,37 @@ export default function Sidebar() {
       <nav className="flex-1">
         <ul className="space-y-2">
           <li>
-            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-pastel-pink border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
+            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-[#FCE4EC] border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
               <span className="w-5 h-5 flex items-center justify-center border-2 border-current rounded-sm opacity-70">🏠</span>
               <span className="font-semibold tracking-wider font-pixel text-[10px]">HOME</span>
             </NavLink>
           </li>
           <li>
-            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/quests" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-pastel-pink border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
+            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/quests" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-[#FCE4EC] border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
               <span className="w-5 h-5 flex items-center justify-center border-2 border-current rounded-sm opacity-70">📋</span>
               <span className="font-semibold tracking-wider font-pixel text-[10px]">QUESTS</span>
             </NavLink>
           </li>
           <li>
-            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/backpack" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-pastel-pink border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
+            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/backpack" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-[#FCE4EC] border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
               <span className="w-5 h-5 flex items-center justify-center border-2 border-current rounded-sm opacity-70">🎒</span>
               <span className="font-semibold tracking-wider font-pixel text-[10px]">BACKPACK</span>
             </NavLink>
           </li>
           <li>
-            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/skill-exchange" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-pastel-pink border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
+            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/skill-exchange" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-[#FCE4EC] border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
               <span className="w-5 h-5 flex items-center justify-center border-2 border-current rounded-sm opacity-70">🪄</span>
               <span className="font-semibold tracking-wider font-pixel text-[10px]">SKILLS</span>
             </NavLink>
           </li>
           <li>
-            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/leaderboard" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-pastel-pink border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
+            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/leaderboard" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-[#FCE4EC] border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
               <span className="w-5 h-5 flex items-center justify-center border-2 border-current rounded-sm opacity-70">🏆</span>
               <span className="font-semibold tracking-wider font-pixel text-[10px]">RANKS</span>
             </NavLink>
           </li>
           <li>
-            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/profile" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-pastel-pink border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
+            <NavLink onMouseEnter={() => playSound('hover')} onClick={() => playSound('click')} to="/profile" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 transition-all transform hover:-translate-y-1 ${isActive ? 'bg-[#FCE4EC] border-2 border-slate-800 text-slate-800 shadow-[4px_4px_0px_theme(colors.pastel-pink)]' : 'bg-white border-2 border-slate-800 text-slate-600 shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-pink)]'}`}>
               <span className="w-5 h-5 flex items-center justify-center border-2 border-current rounded-sm opacity-70">👤</span>
               <span className="font-semibold tracking-wider font-pixel text-[10px]">PROFILE</span>
             </NavLink>

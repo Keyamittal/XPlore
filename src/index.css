@@ -109,7 +109,17 @@
     border: 4px solid #334155;
     box-shadow: 
       inset -4px -4px 0px rgba(0, 0, 0, 0.05),
-      4px 4px 0px #88dce7;
+      4px 4px 0px #A0C4FF;
+    border-radius: 0;
+    background-color: theme('colors.panel-bg');
+    position: relative;
+  }
+
+  .panel-border-blue {
+    border: 4px solid #334155;
+    box-shadow: 
+      inset -4px -4px 0px rgba(0, 0, 0, 0.05),
+      4px 4px 0px #A0C4FF;
     border-radius: 0;
     background-color: theme('colors.panel-bg');
     position: relative;

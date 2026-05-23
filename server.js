@@ -44,7 +44,39 @@ db.serialize(() => {
     user_id TEXT
   )`);
 
-  // We could seed initial quests here, but for brevity, we'll let the frontend send default quests if empty.
+  db.run(`CREATE TABLE IF NOT EXISTS skills (
+    id TEXT PRIMARY KEY,
+    type TEXT,
+    skill TEXT,
+    description TEXT,
+    tags TEXT,
+    posted_by TEXT,
+    initials TEXT,
+    duration TEXT,
+    bonus_xp INTEGER,
+    accepted BOOLEAN DEFAULT 0,
+    accepted_by TEXT DEFAULT NULL,
+    email TEXT,
+    phone TEXT,
+    user_id TEXT DEFAULT NULL
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    skill_id TEXT,
+    skill_name TEXT,
+    partner_name TEXT,
+    date TEXT,
+    time TEXT,
+    venue TEXT,
+    user_id TEXT
+  )`);
+
+  // Remove any fake preset skills to ensure 100% actual registered postings
+  db.run("DELETE FROM skills WHERE user_id IS NULL", function(err) {
+    if (err) console.error("Error clearing presets:", err.message);
+    else console.log("🚀 SQLite DB: Cleared fake preset skills successfully!");
+  });
 });
 
 const app = express();
@@ -137,10 +169,16 @@ app.post('/api/user/sync', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!row) return res.status(404).json({ error: 'User not found' });
     
-    // Convert to frontend friendly structure
-    const xpProgress = row.xp % 100;
-    const computedLevel = Math.floor(row.xp / 100) + 1;
-    const user = { ...row, level: computedLevel, xp: xpProgress, totalXP: row.xp, xpToNext: 100 };
+    // Defensive parsing & healing of NaN values in database
+    let totalXp = parseInt(row.xp);
+    if (isNaN(totalXp) || totalXp === null) {
+      totalXp = 0;
+      db.run(`UPDATE users SET total_xp = 0, level = 1 WHERE id = ?`, [userId]);
+    }
+    
+    const xpProgress = totalXp % 100;
+    const computedLevel = Math.floor(totalXp / 100) + 1;
+    const user = { ...row, level: computedLevel, xp: xpProgress, totalXP: totalXp, xpToNext: 100 };
     res.json({ user });
   });
 });
@@ -149,10 +187,17 @@ app.post('/api/user/sync', (req, res) => {
 app.post('/api/user/add-xp', (req, res) => {
   const { userId, amount } = req.body;
   
+  const xpAmount = parseInt(amount) || 0;
+  
   db.get(`SELECT total_xp, level, title FROM users WHERE id = ?`, [userId], (err, row) => {
     if (err || !row) return res.status(404).json({ error: 'User not found' });
     
-    let newTotalXp = row.total_xp + amount;
+    let currentTotalXp = parseInt(row.total_xp);
+    if (isNaN(currentTotalXp)) {
+      currentTotalXp = 0;
+    }
+    
+    let newTotalXp = currentTotalXp + xpAmount;
     let newLevel = Math.floor(newTotalXp / 100) + 1;
     let xpToNext = 100;
     let newXpProgress = newTotalXp % 100;
@@ -166,6 +211,127 @@ app.post('/api/user/add-xp', (req, res) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true, newXp: newXpProgress, totalXP: newTotalXp, newLevel, newTitle, xpToNext });
     });
+  });
+});
+
+// 3. Get Leaderboard (All Registered Users)
+app.get('/api/users/leaderboard', (req, res) => {
+  db.all(
+    `SELECT id, username, initials, level, title, total_xp as totalXP, streak FROM users ORDER BY total_xp DESC`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      
+      const formatted = rows.map(r => {
+        let xp = parseInt(r.totalXP);
+        if (isNaN(xp)) xp = 0;
+        let lv = parseInt(r.level);
+        if (isNaN(lv)) lv = Math.floor(xp / 100) + 1;
+        
+        return {
+          id: r.id,
+          username: r.username,
+          initials: r.initials || '??',
+          level: lv,
+          title: r.title || 'NOVICE',
+          totalXP: xp,
+          streak: r.streak || 1
+        };
+      });
+      
+      res.json({ users: formatted });
+    }
+  );
+});
+
+// -------------- SKILLS EXCHANGE ROUTES --------------
+
+// 1. Get All Shared Skills
+app.get('/api/skills', (req, res) => {
+  db.all("SELECT * FROM skills ORDER BY rowid DESC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    
+    const formatted = rows.map(r => ({
+      ...r,
+      tags: r.tags ? r.tags.split(',').map(t => t.trim()) : [],
+      accepted: !!r.accepted,
+      postedBy: r.posted_by,
+      bonusXp: r.bonus_xp,
+      userId: r.user_id,
+      acceptedBy: r.accepted_by
+    }));
+    res.json({ skills: formatted });
+  });
+});
+
+// 2. Post a Skill (Store credentials dynamically)
+app.post('/api/skills', (req, res) => {
+  const { id, type, skill, description, tags, postedBy, initials, duration, bonusXp, email, phone, userId } = req.body;
+  if (!id || !type || !skill || !description || !postedBy || !initials) {
+    return res.status(400).json({ error: 'Missing required skill fields' });
+  }
+
+  const tagsStr = Array.isArray(tags) ? tags.join(', ') : tags || 'Custom';
+
+  db.run(
+    `INSERT INTO skills (id, type, skill, description, tags, posted_by, initials, duration, bonus_xp, email, phone, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, type, skill, description, tagsStr, postedBy, initials, duration || '1 hr', bonusXp || 15, email, phone, userId],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(201).json({ success: true });
+    }
+  );
+});
+
+// 3. Accept a Skill Exchange (Match Secured)
+app.post('/api/skills/accept', (req, res) => {
+  const { id, userId } = req.body;
+  if (!id || !userId) return res.status(400).json({ error: 'Missing id or userId' });
+
+  db.run(
+    `UPDATE skills SET accepted = 1, accepted_by = ? WHERE id = ?`,
+    [userId, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+// -------------- STUDY SESSIONS TIMELINE ROUTES --------------
+
+// 1. Get Scheduled Sessions
+app.get('/api/sessions/:userId', (req, res) => {
+  const { userId } = req.params;
+  db.all("SELECT id, skill_id as skillId, skill_name as skillName, partner_name as partnerName, date, time, venue FROM sessions WHERE user_id = ? ORDER BY rowid DESC", [userId], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ sessions: rows });
+  });
+});
+
+// 2. Lock a Session
+app.post('/api/sessions', (req, res) => {
+  const { id, skillId, skillName, partnerName, date, time, venue, userId } = req.body;
+  if (!id || !skillId || !skillName || !partnerName || !date || !time || !venue || !userId) {
+    return res.status(400).json({ error: 'Missing session fields' });
+  }
+
+  db.run(
+    `INSERT INTO sessions (id, skill_id, skill_name, partner_name, date, time, venue, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, skillId, skillName, partnerName, date, time, venue, userId],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(201).json({ success: true });
+    }
+  );
+});
+
+// 3. Cancel a Session
+app.delete('/api/sessions/:id', (req, res) => {
+  const { id } = req.params;
+  db.run("DELETE FROM sessions WHERE id = ?", [id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
   });
 });
 

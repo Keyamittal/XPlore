@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/audio';
+import { Lock } from 'lucide-react';
 
 export default function Dashboard() {
   const {
@@ -475,21 +476,23 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <section className={`p-4 relative overflow-hidden transition-all flex flex-col justify-between bg-white hover:bg-slate-50/50 transition-colors ${
           mysteryMissionState === 'locked'
-            ? 'panel-border-pink'
+            ? 'panel-border-darkblue'
             : mysteryMissionState === 'unlocked'
             ? 'panel-border-purple'
             : mysteryMissionState === 'accepted'
             ? 'panel-border-cyan'
+            : mysteryMissionState === 'completed'
+            ? 'panel-border-blue'
             : 'panel-border-lightblue'
         }`}>
           {/* Header */}
           <div className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
             <span className="font-pixel text-[9px] font-bold tracking-wider flex items-center gap-1">
               <span className="pixel-star scale-75 inline-block mr-1"></span>
-              {mysteryMissionState === 'locked' && <span className="text-rose-900 font-extrabold">MYSTERY MISSION (LOCKED)</span>}
+              {mysteryMissionState === 'locked' && <span className="text-[#1e3a8a] font-extrabold">MYSTERY MISSION (LOCKED)</span>}
               {mysteryMissionState === 'unlocked' && <span className="text-purple-900 font-extrabold">MYSTERY MISSION</span>}
               {mysteryMissionState === 'accepted' && <span className="text-cyan-900 font-extrabold">ACTIVE MYSTERY MISSION</span>}
-              {mysteryMissionState === 'completed' && <span className="text-[#800000] font-pixel font-bold">MYSTERY QUEST CONQUERED!</span>}
+              {mysteryMissionState === 'completed' && <span className="text-blue-900 font-extrabold">MYSTERY QUEST CONQUERED!</span>}
             </span>
             <button
               onClick={() => { playSound('click'); navigate('/quests'); }}
@@ -501,30 +504,34 @@ export default function Dashboard() {
 
           {/* Body content based on state */}
           {mysteryMissionState === 'locked' && (
-            <div className="flex items-start gap-3 flex-1 w-full">
-              <div className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0 text-xl shadow-sm select-none">
-                🔒
-              </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
-                <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
-                  Finish <strong className="text-slate-800">all 12 daily tasks</strong> on the Quest Board to unlock your surprise Daily Fun Quest!
-                </p>
-                <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-800 leading-none">
-                      {quests.filter(q => q.completed).length}/12 Complete
+            <div className="flex flex-col justify-between h-full w-full flex-1">
+              <div className="flex items-start gap-3 w-full">
+                <div className="w-12 h-12 bg-blue-50/50 border border-blue-500/50 rounded flex items-center justify-center shrink-0 shadow-sm select-none">
+                  <Lock className="text-blue-600 w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
+                    Finish <strong className="text-slate-800">all 12 daily tasks</strong> to unlock your surprise Daily Fun Quest!
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-pixel font-bold text-slate-800 bg-slate-100 px-2 py-0.5 border border-slate-200 rounded">
+                      {quests.filter(q => q.completed).length}/12 COMPLETE
                     </span>
                     <span
                       onClick={() => { playSound('success'); cheatCompleteAllQuests(); }}
-                      className="text-[7px] text-purple-600 font-pixel hover:text-pastel-pink cursor-pointer underline leading-none mt-1"
+                      className="text-[7px] font-pixel text-purple-600 hover:text-white bg-purple-50 hover:bg-purple-600 border border-purple-300 hover:border-purple-600 px-1.5 py-0.5 rounded cursor-pointer transition-all shadow-sm active:scale-95"
+                      title="Developer bypass to complete all quests"
                     >
-                      DEV: Complete All
+                      🔧 DEV: COMPLETE ALL
                     </span>
                   </div>
-                  <button className="px-3 py-2 bg-slate-100 border-2 border-slate-300 text-slate-400 text-xs font-pixel font-bold cursor-not-allowed select-none uppercase">
-                    LOCKED
-                  </button>
                 </div>
+              </div>
+              
+              <div className="flex items-center mt-3 pt-2 border-t border-slate-100/50 w-full justify-center">
+                <button className="w-[80%] py-1.5 bg-emerald-50/80 pixel-border text-emerald-700 text-[9px] font-pixel font-bold cursor-not-allowed select-none uppercase text-center shadow-sm">
+                  LOCKED
+                </button>
               </div>
             </div>
           )}
@@ -536,29 +543,31 @@ export default function Dashboard() {
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
                 <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
-                  Spontaneous quest ready! Category: <strong className="text-purple-800">{mysteryMission.category}</strong>. Complete to claim titles and trophies.
+                  Spontaneous quest ready! Category: <strong className="text-purple-800">{mysteryMission.category}</strong>. Complete to claim rewards!
                 </p>
-                <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-                  <div className="flex gap-1.5 items-center">
+                <div className="flex flex-col gap-2 mt-auto pt-2 border-t border-slate-100 w-full">
+                  <div className="flex items-stretch gap-2 w-full">
                     <button
                       onClick={() => { playSound('click'); shuffleMysteryMission(); }}
-                      className="text-[8px] font-pixel text-slate-500 hover:text-purple-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm"
+                      className="flex flex-col items-center justify-center p-2 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 hover:border-purple-300 transition-all flex-1 text-center active:scale-95 shadow-sm"
                       title="Shuffle challenge (costs 10 XP)"
                     >
-                      SHUFFLE (-10XP)
+                      <span className="text-[8px] font-pixel text-slate-700 leading-normal">SHUFFLE</span>
+                      <span className="text-[7px] font-pixel text-purple-900 mt-1.5 leading-normal font-extrabold">-10 XP</span>
                     </button>
                     <button
                       disabled={mysteryMissionSkips <= 0}
                       onClick={() => { playSound('click'); skipMysteryMission(); }}
-                      className="text-[8px] font-pixel text-slate-500 hover:text-cyan-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex flex-col items-center justify-center p-2 rounded border border-slate-200 bg-slate-50 hover:bg-cyan-50 hover:border-cyan-300 transition-all flex-1 text-center disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-sm"
                       title="Skip once per day"
                     >
-                      SKIP ({mysteryMissionSkips}/1)
+                      <span className="text-[8px] font-pixel text-slate-700 leading-normal">SKIP</span>
+                      <span className="text-[7px] font-pixel text-cyan-900 mt-1.5 leading-normal font-extrabold">{mysteryMissionSkips}/1 left</span>
                     </button>
                   </div>
                   <button
                     onClick={() => { playSound('click'); acceptMysteryMission(); }}
-                    className="px-3 py-2 bg-pastel-pink pixel-border text-slate-800 text-xs font-pixel hover:bg-pastel-yellow transition-colors font-bold uppercase"
+                    className="w-[80%] py-1.5 mx-auto bg-pastel-pink pixel-border text-slate-800 text-[9px] font-pixel hover:bg-pastel-yellow transition-all font-bold uppercase text-center active:scale-95 shadow-sm"
                   >
                     ACCEPT
                   </button>
@@ -574,28 +583,30 @@ export default function Dashboard() {
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
                 <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
-                  Active Challenge: <strong className="text-cyan-800">{mysteryMission.title}</strong> - {mysteryMission.description}
+                  Active: <strong className="text-cyan-800">{mysteryMission.title}</strong> - {mysteryMission.description}
                 </p>
-                <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-                  <div className="flex gap-1.5 items-center">
+                <div className="flex flex-col gap-2 mt-auto pt-2 border-t border-slate-100 w-full">
+                  <div className="flex items-stretch gap-2 w-full">
                     <button
                       onClick={() => { playSound('click'); shuffleMysteryMission(); }}
-                      className="text-[8px] font-pixel text-slate-500 hover:text-purple-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm"
+                      className="flex flex-col items-center justify-center p-2 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 hover:border-purple-300 transition-all flex-1 text-center active:scale-95 shadow-sm"
                       title="Shuffle challenge (costs 10 XP)"
                     >
-                      SHUFFLE (-10XP)
+                      <span className="text-[8px] font-pixel text-slate-700 leading-normal">SHUFFLE</span>
+                      <span className="text-[7px] font-pixel text-purple-900 mt-1.5 leading-normal font-extrabold">-10 XP</span>
                     </button>
                     <button
                       disabled={mysteryMissionSkips <= 0}
                       onClick={() => { playSound('click'); skipMysteryMission(); }}
-                      className="text-[8px] font-pixel text-slate-500 hover:text-cyan-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1 py-0.5 rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex flex-col items-center justify-center p-2 rounded border border-slate-200 bg-slate-50 hover:bg-cyan-50 hover:border-cyan-300 transition-all flex-1 text-center disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-sm"
                     >
-                      SKIP ({mysteryMissionSkips}/1)
+                      <span className="text-[8px] font-pixel text-slate-700 leading-normal">SKIP</span>
+                      <span className="text-[7px] font-pixel text-cyan-900 mt-1.5 leading-normal font-extrabold">{mysteryMissionSkips}/1 left</span>
                     </button>
                   </div>
                   <button
                     onClick={handleCompleteMysteryMission}
-                    className="px-3 py-2 bg-emerald-500 pixel-border text-slate-800 text-xs font-pixel hover:bg-emerald-400 transition-colors font-bold uppercase animate-pulse"
+                    className="w-[80%] py-1.5 mx-auto bg-[#A5D6A7] pixel-border text-slate-800 text-[9px] font-pixel hover:bg-[#C8E6C9] transition-all font-bold uppercase animate-pulse text-center active:scale-95 shadow-sm"
                   >
                     DONE
                   </button>
@@ -606,26 +617,26 @@ export default function Dashboard() {
 
           {mysteryMissionState === 'completed' && mysteryMission && (
             <div className="flex items-start gap-3 flex-1 w-full">
-              <div className="w-12 h-12 bg-white border border-pastel-yellow rounded flex items-center justify-center shrink-0 shadow-sm select-none">
-                <svg className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(217,119,6,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <div className="w-12 h-12 bg-white border border-[#A0C4FF] rounded flex items-center justify-center shrink-0 shadow-sm select-none">
+                <svg className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(59,130,246,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
-                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fbbf24" />
-                      <stop offset="50%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#d97706" />
+                    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#A0C4FF" />
+                      <stop offset="50%" stopColor="#3B82F6" />
+                      <stop offset="100%" stopColor="#1E3A8A" />
                     </linearGradient>
                   </defs>
-                  <path d="M18 2H6v2H2v6c0 2.2 1.8 4 4 4h2.2c.8 1.6 2.2 2.8 3.8 3.2V20H9v2h6v-2h-3v-2.8c1.6-.4 3-1.6 3.8-3.2H18c2.2 0 4-1.8 4-4V4h-4V2zm-10 8V6h2v4H8zm10-2h-2V6h2v2z" fill="url(#goldGrad)" />
+                  <path d="M18 2H6v2H2v6c0 2.2 1.8 4 4 4h2.2c.8 1.6 2.2 2.8 3.8 3.2V20H9v2h6v-2h-3v-2.8c1.6-.4 3-1.6 3.8-3.2H18c2.2 0 4-1.8 4-4V4h-4V2zm-10 8V6h2v4H8zm10-2h-2V6h2v2z" fill="url(#blueGrad)" />
                 </svg>
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
                 <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">
-                  Conquered today's real-life challenge! Claimed the <strong className="text-amber-700">"{mysteryMission.unlockedTitle}"</strong> title and the <strong className="text-amber-700">"{mysteryMission.unlockedCollectible?.name || 'Trophy'}"</strong> collectible.
+                  Conquered today's challenge! Claimed <strong className="text-blue-900 font-extrabold">"{mysteryMission.unlockedTitle}"</strong> and <strong className="text-blue-900 font-extrabold">"{mysteryMission.unlockedCollectible?.name || 'Trophy'}"</strong>.
                 </p>
-                <div className="flex items-center mt-auto pt-1 w-full">
+                <div className="flex items-center mt-auto pt-1 w-full justify-center">
                   <button
                     onClick={() => { playSound('click'); navigate('/profile'); }}
-                    className="w-full py-2 bg-[#88dce7] pixel-border text-slate-800 text-xs font-pixel font-bold hover:bg-pastel-yellow transition-colors text-center uppercase"
+                    className="w-[80%] py-1.5 bg-[#A5D6A7] pixel-border text-slate-800 text-[9px] font-pixel font-bold hover:bg-[#C8E6C9] transition-all text-center uppercase active:scale-95 shadow-sm"
                   >
                     EQUIP TITLE
                   </button>
@@ -641,7 +652,7 @@ export default function Dashboard() {
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"
             title="Go to Backpack Options"
           >
-            <span className="font-pixel text-[9px] text-amber-800 font-bold tracking-wider group-hover/header:text-amber-700 transition-colors flex items-center gap-1">
+            <span className="font-pixel text-[9px] text-[#800000] font-bold tracking-wider group-hover/header:text-[#a00000] transition-colors flex items-center gap-1">
               <span className="pixel-star scale-75 inline-block mr-1"></span>
               MY BACKPACK
             </span>
@@ -657,16 +668,16 @@ export default function Dashboard() {
               className="w-12 h-12 bg-white border border-pastel-cyan rounded flex items-center justify-center shrink-0 cursor-pointer hover:bg-slate-50 transition-colors group/backpack shadow-sm"
               title="Open Backpack"
             >
-              <svg className="w-8 h-8 text-amber-600 group-hover/backpack:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-8 h-8 text-[#800000] group-hover/backpack:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M5 4h14v2H5V4zm-1 3h16v13H4V7zm4 4v4h2v-4H8zm6 0v4h2v-4h-2zm-3-7h2v3h-2V4z" />
               </svg>
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
-              <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Master quest <strong className="text-amber-700">Sets</strong> (grouped task series to build related skills) and manage your <strong className="text-amber-700">Backpack</strong> inventory tools to secure weekly goals!</p>
-              <div className="flex items-center mt-auto pt-1 w-full">
+              <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Master quest <strong className="text-[#800000] font-extrabold">Sets</strong> and manage <strong className="text-[#800000] font-extrabold">Backpack</strong> tools to secure weekly goals!</p>
+              <div className="flex items-center mt-auto pt-1 w-full justify-center">
                 <button
                   onClick={() => { playSound('click'); navigate('/backpack'); }}
-                  className="w-full py-2 bg-[#88dce7] pixel-border text-slate-800 text-xs font-pixel font-bold hover:bg-pastel-yellow transition-colors text-center uppercase"
+                  className="w-[80%] py-1.5 bg-[#A0C4FF] pixel-border text-slate-800 text-[9px] font-pixel font-bold hover:bg-pastel-yellow transition-all text-center uppercase active:scale-95 shadow-sm"
                 >
                   OPEN BACKPACK
                 </button>
@@ -696,11 +707,11 @@ export default function Dashboard() {
               <img alt="Monster" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJqvHAG-77KicVUI6E5y9OaLNkH_KmJdNe55qpYx88_5Bj9UidrzNgUD0CzFxKy2FFiALRwoWNCCG9RkV_v_dfOJVIyGRVx22_Onm79syyy4NPBX7OloQvVyVXcSFYoxDXgy5TYkrkulfSxLFP0ReMg7Zm5oQFl5wc_Bl3xZfUSLwIRRdfb07fWmemFXoJ1UHPvh1EaJ60SkoJmzSlTIJdmqlutsGL6ckXI4nuRgosI8DNoXrYHpn8-MXomLHo6QXOMDGIske93lA" />
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-between h-full w-full">
-              <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Face powerful monsters in the turn-based RPG arena. Click <strong className="text-purple-700">FIGHT</strong> to battle the boss, test your skills, and earn +50 XP!</p>
-              <div className="flex items-center mt-auto pt-1 w-full">
+              <p className="text-[11px] text-slate-600 leading-snug mb-2 font-medium">Face monsters in the turn-based RPG arena. Click <strong className="text-purple-700">FIGHT</strong> to battle the boss and earn +50 XP!</p>
+              <div className="flex items-center mt-auto pt-1 w-full justify-center">
                 <button
                   onClick={(e) => { e.preventDefault(); startBossBattle(); }}
-                  className="w-full py-2 bg-pastel-pink pixel-border text-slate-800 text-xs font-pixel font-bold hover:bg-pastel-yellow transition-colors text-center uppercase"
+                  className="w-[80%] py-1.5 bg-pastel-pink pixel-border text-slate-800 text-[9px] font-pixel font-bold hover:bg-pastel-yellow transition-all text-center uppercase active:scale-95 shadow-sm"
                 >
                   FIGHT BOSS
                 </button>
@@ -727,7 +738,7 @@ export default function Dashboard() {
               VIEW VAULT <span className="font-bold">&gt;</span>
             </button>
           </div>
-          <div className="flex flex-wrap justify-around items-center gap-4 flex-1 py-4">
+          <div className="flex flex-wrap justify-around items-start gap-4 flex-1 py-4">
             {/* Pioneer Badge */}
             <div className="flex flex-col items-center w-24 relative group cursor-pointer">
               {/* Tooltip */}
@@ -829,13 +840,13 @@ export default function Dashboard() {
                   <img alt="React Logo" className="w-8 h-8 relative z-10" src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" />
                 </div>
                 <div>
-                  <p className="text-slate-800 font-bold text-sm tracking-wide group-hover:text-pastel-pink transition-colors">React Hook Mastery</p>
+                  <p className="text-slate-800 font-bold text-sm tracking-wide group-hover:text-rose-500 transition-colors">React Hook Mastery</p>
                   <p className="text-xs text-slate-500 font-medium">Requested by you</p>
                 </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); playSound('click'); navigate('/skill-exchange'); }}
-                className="px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] group-hover:border-pastel-pink group-hover:text-pastel-pink transition-colors"
+                className="px-4 py-2 bg-transparent border-2 border-slate-300 rounded text-slate-600 font-pixel text-[8px] group-hover:border-rose-500 group-hover:text-rose-500 transition-colors"
               >
                 FIND
               </button>
