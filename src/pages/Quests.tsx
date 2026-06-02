@@ -4,11 +4,6 @@ import type { QuestCategory } from '../data/quests';
 import { useGame } from '../context/GameContext';
 
 const categories: QuestCategory[] = ['Academic', 'Wellness', 'Productivity'];
-const categoryIcons: Record<QuestCategory, string> = {
-  Academic: '🎓',
-  Wellness: '💚',
-  Productivity: '⚡',
-};
 const difficultyStars = ['', '★☆☆', '★★☆', '★★★'];
 const difficultyColors = ['', '#4ade80', '#fbbf24', '#ff00ff']; // green, gold, pastel-pink
 
@@ -118,7 +113,6 @@ export default function Quests() {
           return (
             <div key={category} className="flex flex-col gap-4">
               <div className="flex items-center gap-3 border-b border-slate-200 pb-2">
-                <span className="text-xl">{categoryIcons[category]}</span>
                 <span className="font-pixel text-sm text-slate-800 tracking-widest">{category.toUpperCase()}</span>
                 <div className="ml-auto flex items-center gap-3">
                   <div className="w-24 border border-slate-200 h-2.5 bg-slate-50 rounded-full overflow-hidden hidden sm:block">

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { initialQuests } from '../data/quests';
+import { initialQuests, getDailyQuests } from '../data/quests';
 import type { Quest } from '../data/quests';
 import { funChallenges } from '../data/funQuests';
 import type { FunChallenge } from '../data/funQuests';
@@ -62,12 +62,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // Backpack & Resources states
   const [gold, setGold] = useState<number>(150);
   const [inventory, setInventory] = useState<InventoryItem[]>([
-    { id: 'hp_potion', name: 'Health Potion', description: 'Restores 45 HP during Boss Battles.', qty: 3, price: 20, icon: '🧪', type: 'heal' },
-    { id: 'xp_booster', name: 'XP Booster', description: 'Instantly grants +50 XP upon consumption.', qty: 1, price: 50, icon: '⚡', type: 'xp' },
-    { id: 'task_shield', name: 'Task Shield', description: 'Protects your daily streak from resetting.', qty: 1, price: 40, icon: '🛡️', type: 'shield' },
-    { id: 'boss_key', name: 'Boss Key', description: 'A mysterious golden key to unlock hidden dungeons and secret vaults.', qty: 0, price: 80, icon: '🔑', type: 'shield' },
-    { id: 'elixir_might', name: 'Elixir of Might', description: 'Increases your physical damage outputs in RPG Boss Battles (passive +10 damage boost).', qty: 0, price: 60, icon: '🧪', type: 'heal' },
-    { id: 'lucky_charm', name: 'Lucky Charm', description: 'Increases critical strike chance in boss encounters (passive 30% chance for 2x crit).', qty: 0, price: 35, icon: '🍀', type: 'xp' }
+    { id: 'hp_potion', name: 'Health Potion', description: "Vitality Brew. Automatically consumed on collision during Alistair's Run to block defeat and grant temporary invincibility!", qty: 3, price: 20, icon: '🧪', type: 'heal' },
+    { id: 'xp_booster', name: 'XP Booster', description: "Score Multiplier. Grants +25% extra score over time during Alistair's Infinite Run!", qty: 1, price: 50, icon: '⚡', type: 'xp' },
+    { id: 'task_shield', name: 'Task Shield', description: "Streak Guard & Barrier. Automatically consumed on collision during Alistair's Run to block defeat and grant temporary invincibility!", qty: 1, price: 40, icon: '🛡️', type: 'shield' },
+    { id: 'boss_key', name: 'Boss Key', description: "Chrono Key. Chrono warp! Slows down obstacle movement speeds by 20% during Alistair's Run for easier dodging!", qty: 0, price: 80, icon: '🔑', type: 'shield' },
+    { id: 'elixir_might', name: 'Elixir of Might', description: "Elixir of Agility. Decreases gravity by 15% during Alistair's Run, giving Alistair floatier and higher jumps!", qty: 0, price: 60, icon: '🧪', type: 'heal' },
+    { id: 'lucky_charm', name: 'Lucky Charm', description: "Fortune Charm. Attracts wealth! Multiplies coin spawning rate by 2x during Alistair's Infinite Run!", qty: 0, price: 35, icon: '🍀', type: 'xp' }
   ]);
 
   // Sync gold & inventory with localStorage on user change
@@ -86,12 +86,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         try {
           const parsed = JSON.parse(savedInv);
           const defaultItems: InventoryItem[] = [
-            { id: 'hp_potion', name: 'Health Potion', description: 'Restores 45 HP during Boss Battles.', qty: 3, price: 20, icon: '🧪', type: 'heal' },
-            { id: 'xp_booster', name: 'XP Booster', description: 'Instantly grants +50 XP upon consumption.', qty: 1, price: 50, icon: '⚡', type: 'xp' },
-            { id: 'task_shield', name: 'Task Shield', description: 'Protects your daily streak from resetting.', qty: 1, price: 40, icon: '🛡️', type: 'shield' },
-            { id: 'boss_key', name: 'Boss Key', description: 'A mysterious golden key to unlock hidden dungeons and secret vaults.', qty: 0, price: 80, icon: '🔑', type: 'shield' },
-            { id: 'elixir_might', name: 'Elixir of Might', description: 'Increases your physical damage outputs in RPG Boss Battles (passive +10 damage boost).', qty: 0, price: 60, icon: '🧪', type: 'heal' },
-            { id: 'lucky_charm', name: 'Lucky Charm', description: 'Increases critical strike chance in boss encounters (passive 30% chance for 2x crit).', qty: 0, price: 35, icon: '🍀', type: 'xp' }
+            { id: 'hp_potion', name: 'Health Potion', description: "Vitality Brew. Automatically consumed on collision during Alistair's Run to block defeat and grant temporary invincibility!", qty: 3, price: 20, icon: '🧪', type: 'heal' },
+            { id: 'xp_booster', name: 'XP Booster', description: "Score Multiplier. Grants +25% extra score over time during Alistair's Infinite Run!", qty: 1, price: 50, icon: '⚡', type: 'xp' },
+            { id: 'task_shield', name: 'Task Shield', description: "Streak Guard & Barrier. Automatically consumed on collision during Alistair's Run to block defeat and grant temporary invincibility!", qty: 1, price: 40, icon: '🛡️', type: 'shield' },
+            { id: 'boss_key', name: 'Boss Key', description: "Chrono Key. Chrono warp! Slows down obstacle movement speeds by 20% during Alistair's Run for easier dodging!", qty: 0, price: 80, icon: '🔑', type: 'shield' },
+            { id: 'elixir_might', name: 'Elixir of Might', description: "Elixir of Agility. Decreases gravity by 15% during Alistair's Run, giving Alistair floatier and higher jumps!", qty: 0, price: 60, icon: '🧪', type: 'heal' },
+            { id: 'lucky_charm', name: 'Lucky Charm', description: "Fortune Charm. Attracts wealth! Multiplies coin spawning rate by 2x during Alistair's Infinite Run!", qty: 0, price: 35, icon: '🍀', type: 'xp' }
           ];
           
           const merged = defaultItems.map(def => {
@@ -105,12 +105,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }
       } else {
         const defaultInv: InventoryItem[] = [
-          { id: 'hp_potion', name: 'Health Potion', description: 'Restores 45 HP during Boss Battles.', qty: 3, price: 20, icon: '🧪', type: 'heal' },
-          { id: 'xp_booster', name: 'XP Booster', description: 'Instantly grants +50 XP upon consumption.', qty: 1, price: 50, icon: '⚡', type: 'xp' },
-          { id: 'task_shield', name: 'Task Shield', description: 'Protects your daily streak from resetting.', qty: 1, price: 40, icon: '🛡️', type: 'shield' },
-          { id: 'boss_key', name: 'Boss Key', description: 'A mysterious golden key to unlock hidden dungeons and secret vaults.', qty: 0, price: 80, icon: '🔑', type: 'shield' },
-          { id: 'elixir_might', name: 'Elixir of Might', description: 'Increases your physical damage outputs in RPG Boss Battles (passive +10 damage boost).', qty: 0, price: 60, icon: '🧪', type: 'heal' },
-          { id: 'lucky_charm', name: 'Lucky Charm', description: 'Increases critical strike chance in boss encounters (passive 30% chance for 2x crit).', qty: 0, price: 35, icon: '🍀', type: 'xp' }
+          { id: 'hp_potion', name: 'Health Potion', description: "Vitality Brew. Automatically consumed on collision during Alistair's Run to block defeat and grant temporary invincibility!", qty: 3, price: 20, icon: '🧪', type: 'heal' },
+          { id: 'xp_booster', name: 'XP Booster', description: "Score Multiplier. Grants +25% extra score over time during Alistair's Infinite Run!", qty: 1, price: 50, icon: '⚡', type: 'xp' },
+          { id: 'task_shield', name: 'Task Shield', description: "Streak Guard & Barrier. Automatically consumed on collision during Alistair's Run to block defeat and grant temporary invincibility!", qty: 1, price: 40, icon: '🛡️', type: 'shield' },
+          { id: 'boss_key', name: 'Boss Key', description: "Chrono Key. Chrono warp! Slows down obstacle movement speeds by 20% during Alistair's Run for easier dodging!", qty: 0, price: 80, icon: '🔑', type: 'shield' },
+          { id: 'elixir_might', name: 'Elixir of Might', description: "Elixir of Agility. Decreases gravity by 15% during Alistair's Run, giving Alistair floatier and higher jumps!", qty: 0, price: 60, icon: '🧪', type: 'heal' },
+          { id: 'lucky_charm', name: 'Lucky Charm', description: "Fortune Charm. Attracts wealth! Multiplies coin spawning rate by 2x during Alistair's Infinite Run!", qty: 0, price: 35, icon: '🍀', type: 'xp' }
         ];
         setInventory(defaultInv);
         localStorage.setItem(`xplore_inventory_${user.id}`, JSON.stringify(defaultInv));
@@ -168,8 +168,58 @@ export function GameProvider({ children }: { children: ReactNode }) {
       } else {
         setMysteryMissionSkips(1);
       }
+
+      // Load Quests and verify calendar daily rotation
+      const savedQuests = localStorage.getItem(`xplore_quests_${user.id}`);
+      const savedQuestsDay = localStorage.getItem(`xplore_quests_day_${user.id}`);
+      const currentDay = new Date().getDate();
+
+      const isNewDay = !(savedQuests && savedQuestsDay && Number(savedQuestsDay) === currentDay);
+      
+      // Auto-heal check: if today's quests are loaded but not all completed, mystery mission must be locked
+      let shouldForceLock = false;
+      if (!isNewDay && savedQuests) {
+        try {
+          const parsedQuests = JSON.parse(savedQuests);
+          if (Array.isArray(parsedQuests) && parsedQuests.length > 0 && !parsedQuests.every((q: any) => q.completed)) {
+            shouldForceLock = true;
+          }
+        } catch (e) {}
+      }
+
+      if (isNewDay) {
+        // Day rotated or no saved quests exist - load new quests and initialize localStorage
+        const freshQuests = getDailyQuests();
+        setQuests(freshQuests);
+        localStorage.setItem(`xplore_quests_${user.id}`, JSON.stringify(freshQuests));
+        localStorage.setItem(`xplore_quests_day_${user.id}`, String(currentDay));
+
+        // Reset daily mystery mission to locked for the new day
+        setMysteryMission(null);
+        setMysteryMissionState('locked');
+        setMysteryMissionSkips(1);
+        localStorage.removeItem(`xplore_mystery_mission_${user.id}`);
+        localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'locked');
+        localStorage.setItem(`xplore_mystery_skips_${user.id}`, '1');
+      } else {
+        try {
+          setQuests(JSON.parse(savedQuests!));
+        } catch (e) {
+          console.error("Failed to parse saved quests:", e);
+          setQuests(initialQuests);
+        }
+
+        if (shouldForceLock) {
+          setMysteryMission(null);
+          setMysteryMissionState('locked');
+          localStorage.removeItem(`xplore_mystery_mission_${user.id}`);
+          localStorage.setItem(`xplore_mystery_mission_state_${user.id}`, 'locked');
+        }
+      }
     }
   }, [user]);
+
+
 
   useEffect(() => {
     const savedUser = localStorage.getItem('xplore_user');
@@ -267,10 +317,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const quest = quests.find(q => q.id === questId);
     if (!quest || quest.completed) return;
 
-    // Optimistic UI Update
-    setQuests(prev => prev.map(q => q.id === questId ? { ...q, completed: true } : q));
+    // Direct synchronous updates to quests to prevent any React render race conditions
+    const updatedQuests = quests.map(q => q.id === questId ? { ...q, completed: true } : q);
+    setQuests(updatedQuests);
 
     if (user) {
+      localStorage.setItem(`xplore_quests_${user.id}`, JSON.stringify(updatedQuests));
+      localStorage.setItem(`xplore_quests_day_${user.id}`, String(new Date().getDate()));
       // Award Gold corresponding to double the XP reward of the completed quest
       addGoldDirectly(quest.xpReward * 2);
 
@@ -460,7 +513,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const cheatCompleteAllQuests = () => {
-    setQuests(prev => prev.map(q => ({ ...q, completed: true })));
+    const updatedQuests = quests.map(q => ({ ...q, completed: true }));
+    setQuests(updatedQuests);
+    if (user) {
+      localStorage.setItem(`xplore_quests_${user.id}`, JSON.stringify(updatedQuests));
+      localStorage.setItem(`xplore_quests_day_${user.id}`, String(new Date().getDate()));
+    }
   };
 
   return (

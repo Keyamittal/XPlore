@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { playSound } from '../utils/audio';
+import { playSound, startMysteriousTheme, stopMysteriousTheme } from '../utils/audio';
 import { funChallenges } from '../data/funQuests';
 import confetti from 'canvas-confetti';
 
 export default function Backpack() {
   const { gold, inventory, buyItem, useItem, unlockedCollectibles } = useGame();
+  
+  useEffect(() => {
+    // Start mysterious background merchant music
+    startMysteriousTheme();
+    return () => {
+      // Clean up and stop mysterious music on unmount
+      stopMysteriousTheme();
+    };
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'backpack' | 'shop' | 'collectibles'>('backpack');
   const [merchantDialogue, setMerchantDialogue] = useState<string>(
     "Welcome, traveler! Spend your hard-earned gold coins on items to aid your journey."
@@ -42,7 +52,7 @@ export default function Backpack() {
       playSound('success');
       
       if (id === 'xp_booster') {
-        setUseFeedback(`⚡ Consumed XP Booster! Granted +50 XP!`);
+        setUseFeedback(`⚡ Consumed XP Booster! Granted +50 XP! (Tip: Keep in backpack for passive +25% score speed during Alistair's Run!)`);
         confetti({
           particleCount: 100,
           spread: 80,
@@ -50,7 +60,7 @@ export default function Backpack() {
           colors: ['#CE93D8', '#F48FB1', '#FFD54F', '#0E7490']
         });
       } else if (id === 'task_shield') {
-        setUseFeedback(`🛡️ Activated Task Shield! Streak incremented by +1 & protected!`);
+        setUseFeedback(`🛡️ Activated Task Shield! Streak incremented by +1 & protected! (Tip: Task Shields are consumed automatically during Alistair's Run to block defeat!)`);
         confetti({
           particleCount: 30,
           spread: 40,
@@ -58,9 +68,9 @@ export default function Backpack() {
           colors: ['#81C784', '#AEECEF']
         });
       } else if (id === 'hp_potion') {
-        setUseFeedback(`🧪 Consumed Health Potion! Restored Health. (Tip: Health Potions are consumed automatically during Boss Battles!)`);
+        setUseFeedback(`🧪 Consumed Health Potion! Restored Health. (Tip: Health Potions are consumed automatically during Alistair's Run to block defeat!)`);
       } else if (id === 'boss_key') {
-        setUseFeedback(`🔑 Unlocked a Mysterious Vault with the Boss Key! Granted +100 XP!`);
+        setUseFeedback(`🔑 Used Boss Key! Granted +100 XP! (Tip: Keep in backpack for passive 20% slow motion Chrono Warp speed during Alistair's Run!)`);
         confetti({
           particleCount: 120,
           spread: 90,
@@ -68,7 +78,7 @@ export default function Backpack() {
           colors: ['#FFD54F', '#FFC107', '#E0A96D']
         });
       } else if (id === 'elixir_might') {
-        setUseFeedback(`🧪 Drank the Elixir of Might! Granted +60 XP! (Tip: Keep in inventory for passive +10 Boss damage boost!)`);
+        setUseFeedback(`🧪 Drank the Elixir of Might! Granted +60 XP! (Tip: Keep in backpack for passive 15% lower gravity floaty jumps during Alistair's Run!)`);
         confetti({
           particleCount: 80,
           spread: 60,
@@ -76,7 +86,7 @@ export default function Backpack() {
           colors: ['#F48FB1', '#CE93D8']
         });
       } else if (id === 'lucky_charm') {
-        setUseFeedback(`🍀 Activated the Lucky Charm! Granted +35 XP! (Tip: Keep in inventory for passive 30% Critical strike chance!)`);
+        setUseFeedback(`🍀 Activated the Lucky Charm! Granted +35 XP! (Tip: Keep in backpack for passive 2x coin spawning rate during Alistair's Run!)`);
         confetti({
           particleCount: 60,
           spread: 50,
@@ -100,8 +110,12 @@ export default function Backpack() {
         
         {/* Restructured Gold Balance Pill (Matches Quest Board header styling, with static coin, no spin) */}
         <div className="flex bg-slate-50 border border-[#f0dccf] px-6 py-3 rounded-lg gap-3 items-center shadow-sm">
-          <div className="w-8 h-8 rounded-full bg-[#f0dccf] flex items-center justify-center text-lg select-none shadow-inner border border-amber-600">
-            🪙
+          <div className="w-8 h-8 rounded-full bg-[#f0dccf] flex items-center justify-center select-none shadow-inner border border-amber-600 p-1.5 animate-[pulse_3s_infinite_ease-in-out]">
+            <svg className="w-full h-full text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
+              <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
+              <circle cx="12" cy="12" r="3" fill="#fef08a" />
+            </svg>
           </div>
           <div className="flex flex-col items-center md:items-start">
             <span className="text-slate-500 font-pixel text-[10px] block mb-0.5">YOUR BALANCE</span>
@@ -111,23 +125,30 @@ export default function Backpack() {
       </div>
 
       {/* Merchant / Feedback Banner */}
-      <section className="panel-border-cyan p-4 bg-slate-900 border-4 border-slate-800 text-white font-pixel text-[10px] relative overflow-hidden flex flex-col md:flex-row items-center gap-4">
+      <section className="panel-border-cyan p-5 bg-cyan-50/50 border-4 border-slate-800 text-slate-800 font-pixel text-[10px] relative overflow-hidden flex flex-col md:flex-row items-center gap-5">
         {/* Decorative Grid */}
-        <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-grid opacity-5 pointer-events-none"></div>
+
+        {/* Twinkling Sparkles */}
+        <div className="absolute top-2 right-8 text-[12px] animate-pulse select-none text-yellow-300 opacity-75">✨</div>
+        <div className="absolute bottom-3 left-24 text-[8px] animate-pulse select-none text-yellow-200 opacity-60" style={{ animationDelay: '200ms' }}>✨</div>
+        <div className="absolute top-8 left-1/3 text-[10px] animate-pulse select-none text-yellow-300 opacity-50" style={{ animationDelay: '500ms' }}>✨</div>
+        <div className="absolute bottom-4 right-1/3 text-[14px] animate-pulse select-none text-yellow-400 opacity-70" style={{ animationDelay: '100ms' }}>✨</div>
+        <div className="absolute top-4 right-1/4 text-[9px] animate-pulse select-none text-yellow-100 opacity-80" style={{ animationDelay: '700ms' }}>✨</div>
 
         {/* Merchant Avatar Container */}
-        <div className="flex flex-col items-center gap-1 shrink-0">
-          <div className="w-14 h-14 bg-slate-800 border-2 border-pastel-cyan rounded flex items-center justify-center text-3xl select-none shadow-sm relative">
+        <div className="flex flex-col items-center gap-1.5 shrink-0">
+          <div className="w-16 h-16 bg-slate-100 border-2 border-pastel-cyan rounded flex items-center justify-center text-4xl select-none shadow-sm relative">
             🧙‍♂️
           </div>
-          <span className="bg-pastel-cyan text-white text-[8px] font-pixel font-bold px-1.5 py-0.5 rounded-sm border border-slate-800 shadow-sm leading-none">
+          <span className="bg-pastel-cyan text-white text-[7.5px] font-pixel font-bold px-4 py-1.5 rounded-md border-2 border-slate-800 shadow-md leading-none tracking-widest whitespace-nowrap mt-1">
             MERCHANT
           </span>
         </div>
 
         <div className="flex-1 text-center md:text-left z-10">
-          <span className="text-pastel-cyan font-bold tracking-wider uppercase block mb-1">» Merchant Alistair says:</span>
-          <p className="text-slate-300 leading-relaxed font-medium select-text">
+          <span className="text-cyan-700 font-bold tracking-wider uppercase block mb-1">» Merchant Alistair says:</span>
+          <p className="text-slate-600 leading-relaxed font-medium select-text text-[11px] font-sans">
             {activeTab === 'collectibles' 
               ? "Ho ho! Marvelous! You are showcasing your legendary Rare Collectibles! These are only earned by accomplishing secret Mystery Missions. They represent your real-world bravery!"
               : merchantDialogue}
@@ -254,8 +275,13 @@ export default function Backpack() {
                     <span className="font-pixel text-[9px] text-amber-600 font-bold tracking-wider uppercase">
                       FOR SALE
                     </span>
-                    <span className="font-pixel text-[10px] bg-[#f0dccf] border border-[#f0dccf] text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1">
-                      🪙 {item.price}G
+                    <span className="font-pixel text-[10px] bg-[#f0dccf] border border-[#f0dccf] text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1.5">
+                      <svg className="w-3 h-3 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
+                        <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
+                        <circle cx="12" cy="12" r="3" fill="#fef08a" />
+                      </svg>
+                      {item.price}G
                     </span>
                   </div>
 
@@ -280,7 +306,18 @@ export default function Backpack() {
                       : 'bg-rose-50 text-rose-500 border-rose-300 shadow-none cursor-not-allowed hover:bg-rose-100'
                   }`}
                 >
-                  {canAfford ? `🪙 BUY FOR ${item.price} GOLD` : '❌ NOT ENOUGH GOLD'}
+                  {canAfford ? (
+                    <div className="flex items-center justify-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
+                        <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
+                        <circle cx="12" cy="12" r="3" fill="#fef08a" />
+                      </svg>
+                      <span>BUY FOR {item.price} GOLD</span>
+                    </div>
+                  ) : (
+                    '❌ NOT ENOUGH GOLD'
+                  )}
                 </button>
               </section>
             );

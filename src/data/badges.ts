@@ -55,33 +55,32 @@ export const checkBadgeUnlocked = (
   if (!user) return false;
   const level = user.level || 1;
   const streak = user.streak || 0;
-  const totalXP = user.totalXP || 0;
 
   switch (badgeId) {
     case 'b0': // Pioneer
-      return user.username === 'AryanK' || user.joinDate?.includes('2023') || user.joinDate?.includes('2025') || level >= 12;
+      return user.username === 'AryanK' || user.joinDate?.includes('2023') || user.joinDate?.includes('2025') || user.isBetaParticipant;
     case 'b1': // First Quest
-      return completedQuestsCount >= 1 || level > 1 || totalXP > 0;
+      return completedQuestsCount >= 1;
     case 'b2': // On a Roll
       return streak >= 7;
     case 'b3': // Scholar
-      return completedQuestsCount >= 5 || level >= 8 || totalXP >= 800;
+      return completedQuestsCount >= 50;
     case 'b4': // Knowledge Broker
       return skillsCount >= 1;
     case 'b5': // Level 10
       return level >= 10;
     case 'b6': // Wellness Warrior
-      return completedQuestsCount >= 5 || level >= 6 || totalXP >= 500;
+      return completedQuestsCount >= 20;
     case 'b7': // Streak Lord
       return streak >= 30;
     case 'b8': // Side Quest Hero
-      return sessionsCount >= 1 || skillsCount >= 2;
+      return sessionsCount >= 10;
     case 'b9': // The Centurion
-      return completedQuestsCount >= 10 || level >= 15 || totalXP >= 1500;
+      return completedQuestsCount >= 100;
     case 'b10': // Level 25
       return level >= 25;
     case 'b11': // Deep Worker
-      return completedQuestsCount >= 5 || level >= 5;
+      return completedQuestsCount >= 15;
     case 'b12': // Legend of XPLORE
       return level >= 30;
     default:

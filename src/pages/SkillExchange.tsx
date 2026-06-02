@@ -34,43 +34,10 @@ export interface ScheduledSession {
   venue: string;
 }
 
-const allSkillsPool: SkillOffer[] = [
-  { id: 'sk1', type: 'offer', skill: 'Python Basics', description: 'I can teach you Python fundamentals.', tags: ['Code', 'Beginner'], postedBy: 'Sana T.', initials: 'ST', duration: '1 hr', bonusXp: 10, accepted: false, email: 'sana.t@xplore.edu', phone: '+1 (555) 019-2831' },
-  { id: 'sk2', type: 'request', skill: 'React Hook Mastery', description: 'Need help understanding complex Hooks.', tags: ['React', 'Frontend'], postedBy: 'Karan B.', initials: 'KB', duration: '30 min', bonusXp: 10, accepted: false, email: 'karan.b@xplore.edu', phone: '+1 (555) 014-9928' },
-  { id: 'sk3', type: 'offer', skill: 'Vector Math Tutors', description: 'Explaining matrices and dot products.', tags: ['Math', 'Advanced'], postedBy: 'Dev P.', initials: 'DP', duration: '45 min', bonusXp: 10, accepted: false, email: 'dev.p@xplore.edu', phone: '+1 (555) 017-3829' },
-  { id: 'sk4', type: 'offer', skill: 'UI/UX Design Intro', description: 'Let\'s learn wireframing and color theory.', tags: ['Design', 'UX'], postedBy: 'Alice L.', initials: 'AL', duration: '1.5 hr', bonusXp: 15, accepted: false, email: 'alice.l@xplore.edu', phone: '+1 (555) 011-8849' },
-  { id: 'sk5', type: 'request', skill: 'SQL & Databases', description: 'Looking to master joins and SQL subqueries.', tags: ['Data', 'Backend'], postedBy: 'Mike R.', initials: 'MR', duration: '1 hr', bonusXp: 10, accepted: false, email: 'mike.r@xplore.edu', phone: '+1 (555) 013-8831' },
-  { id: 'sk6', type: 'offer', skill: 'Git & GitHub Basics', description: 'I can teach you branching and merge conflict resolution.', tags: ['Tools', 'Git'], postedBy: 'John H.', initials: 'JH', duration: '45 min', bonusXp: 10, accepted: false, email: 'john.h@xplore.edu', phone: '+1 (555) 015-8822' },
-  { id: 'sk7', type: 'request', skill: 'TypeScript Advanced', description: 'Need help with utility types and generics.', tags: ['TS', 'Code'], postedBy: 'Emma L.', initials: 'EL', duration: '1.5 hr', bonusXp: 20, accepted: false, email: 'emma.l@xplore.edu', phone: '+1 (555) 018-9321' },
-  { id: 'sk8', type: 'offer', skill: 'CSS Flexbox & Grid', description: 'Mastering modern page layouts step-by-step.', tags: ['CSS', 'Frontend'], postedBy: 'Olivia S.', initials: 'OS', duration: '30 min', bonusXp: 10, accepted: false, email: 'olivia.s@xplore.edu', phone: '+1 (555) 012-3841' },
-  { id: 'sk9', type: 'request', skill: 'Docker Containerization', description: 'Need to set up multi-container local environments.', tags: ['DevOps', 'Docker'], postedBy: 'David K.', initials: 'DK', duration: '1 hr', bonusXp: 15, accepted: false, email: 'david.k@xplore.edu', phone: '+1 (555) 016-3918' },
-  { id: 'sk10', type: 'offer', skill: 'Figma Prototyping', description: 'Interactive states, variants, and design systems.', tags: ['Design', 'Figma'], postedBy: 'Chloe N.', initials: 'CN', duration: '1 hr', bonusXp: 10, accepted: false, email: 'chloe.n@xplore.edu', phone: '+1 (555) 010-8432' },
-  { id: 'sk11', type: 'request', skill: 'Data Structures', description: 'Studying binary search trees and heap sorts.', tags: ['CS', 'Math'], postedBy: 'Ryan A.', initials: 'RA', duration: '2 hr', bonusXp: 25, accepted: false, email: 'ryan.a@xplore.edu', phone: '+1 (555) 019-9431' },
-  { id: 'sk12', type: 'offer', skill: 'Rust Fundamentals', description: 'Ownership, borrowing, and lifetime mechanics.', tags: ['Rust', 'Systems'], postedBy: 'Tyler L.', initials: 'TL', duration: '1.5 hr', bonusXp: 20, accepted: false, email: 'tyler.l@xplore.edu', phone: '+1 (555) 011-3829' },
-];
 
-const getDailySkills = (): SkillOffer[] => {
-  const day = new Date().getDate();
-  const index1 = (day * 3) % allSkillsPool.length;
-  const index2 = (day * 7 + 1) % allSkillsPool.length;
-  const index3 = (day * 11 + 2) % allSkillsPool.length;
-
-  const selectedIndices = Array.from(new Set([index1, index2, index3]));
-  while (selectedIndices.length < 3) {
-    const nextIdx = (selectedIndices[selectedIndices.length - 1] + 1) % allSkillsPool.length;
-    selectedIndices.push(nextIdx);
-  }
-
-  return selectedIndices.map(idx => ({ ...allSkillsPool[idx] }));
-};
-
-const getRandomSkills = (count: number): SkillOffer[] => {
-  const shuffled = [...allSkillsPool].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count).map(s => ({ ...s }));
-};
 
 export default function SkillExchange() {
-  const { addXpDirectly, user: currentUser, gold, addGoldDirectly } = useGame();
+  const { addXpDirectly, user: currentUser } = useGame();
   
   const [dailySkills, setDailySkills] = useState<SkillOffer[]>([]);
   const [userSkills, setUserSkills] = useState<SkillOffer[]>([]);
@@ -100,15 +67,12 @@ export default function SkillExchange() {
   const [scheduleTime, setScheduleTime] = useState('');
   const [scheduleVenue, setScheduleVenue] = useState('Virtual Discord Server');
   const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([]);
+  const [allSessions, setAllSessions] = useState<ScheduledSession[]>([]);
   const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Core Sync Function connecting directly to the SQLite shared backend
   const fetchSkillsAndSessions = async () => {
     if (!currentUser?.id) return;
-    setLoading(true);
     try {
       // 1. Fetch skills from database
       const skillsRes = await fetch('http://localhost:3000/api/skills');
@@ -145,56 +109,25 @@ export default function SkillExchange() {
       const sessionsRes = await fetch(`http://localhost:3000/api/sessions/${currentUser.id}`);
       const sessionsData = await sessionsRes.json();
       if (sessionsRes.ok) {
-        setScheduledSessions(sessionsData.sessions);
+        setAllSessions(sessionsData.sessions || []);
+        // Automatically hide sessions that have already completed in real-time
+        const now = new Date();
+        const activeSessions = sessionsData.sessions.filter((sess: any) => {
+          if (!sess.date) return true;
+          const sessTime = new Date(`${sess.date}T${sess.time || '00:00'}`);
+          // Only show sessions scheduled in the future
+          return sessTime.getTime() > now.getTime();
+        });
+        setScheduledSessions(activeSessions);
       }
     } catch (err: any) {
       console.error("DB Load Error:", err);
-      setError(err.message || 'Network error occurred');
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchSkillsAndSessions();
   }, [currentUser]);
-
-  const handleAccept = async (id: string, bonusXp: number) => {
-    if (!currentUser?.id) return;
-    
-    const skill = [...dailySkills, ...userSkills].find(s => s.id === id);
-    if (skill && (skill.userId === currentUser.id || (skill as any).user_id === currentUser.id || skill.postedBy === currentUser.username)) {
-      alert("You cannot accept your own post!");
-      return;
-    }
-    
-    try {
-      // 1. Mark accepted in the shared database
-      const res = await fetch('http://localhost:3000/api/skills/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          id, 
-          userId: currentUser.id,
-          email: `${currentUser.username.toLowerCase()}@xplore.edu`,
-          phone: '+1 (555) 012-' + Math.floor(1000 + Math.random() * 9000)
-        })
-      });
-      if (!res.ok) throw new Error("Failed to accept match in database");
-
-      // 2. Add XP
-      await addXpDirectly(bonusXp);
-
-      // 3. Trigger full sync from database to get fresh state!
-      await fetchSkillsAndSessions();
-
-      setAccepted(p => ({ ...p, [id]: true }));
-      setTimeout(() => setAccepted(p => ({ ...p, [id]: false })), 2000);
-    } catch (err: any) {
-      console.error("Match Acceptance Error:", err);
-      alert(err.message || "Failed to secure match.");
-    }
-  };
 
   const handleAcceptClick = (q: SkillOffer) => {
     if (!currentUser?.id) return;
@@ -312,12 +245,14 @@ export default function SkillExchange() {
     }
   };
 
-  const quests = [...userSkills, ...dailySkills];
+  const quests = [...userSkills, ...dailySkills].filter(
+    q => !allSessions.some(sess => sess.skillId === q.id)
+  );
   const filtered = filter === 'all'
-    ? quests
+    ? quests.filter(q => !q.accepted)
     : filter === 'matched'
       ? quests.filter(q => q.accepted)
-      : quests.filter(q => q.type === filter);
+      : quests.filter(q => q.type === filter && !q.accepted);
 
   const offers = quests.filter(q => q.type === 'offer').length;
   const requests = quests.filter(q => q.type === 'request').length;
@@ -539,6 +474,22 @@ export default function SkillExchange() {
             </div>
           </div>
         ))}
+
+        {/* Dynamic "+ ADD NEW SKILL" card/button */}
+        <div 
+          onClick={handlePostSkillClick}
+          className="p-5 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-300 hover:border-pastel-cyan hover:bg-white/40 transition-all duration-300 rounded-lg cursor-pointer min-h-[250px] text-center group shadow-[2px_2px_0px_#334155] hover:shadow-[4px_4px_0px_theme(colors.pastel-cyan)] hover:-translate-y-1"
+        >
+          <div className="w-12 h-12 bg-slate-100 group-hover:bg-pastel-cyan/20 border border-dashed border-slate-400 group-hover:border-pastel-cyan rounded-full flex items-center justify-center text-slate-500 group-hover:text-pastel-cyan transition-all mb-2 shadow-sm">
+            <Plus size={24} className="group-hover:scale-110 transition-transform" />
+          </div>
+          <span className="font-pixel text-[10px] text-slate-700 font-bold group-hover:text-pastel-cyan transition-colors">
+            + ADD NEW SKILL
+          </span>
+          <p className="text-slate-500 text-xs max-w-[200px] leading-normal font-sans">
+            Teach what you know or request help with something new!
+          </p>
+        </div>
       </div>
 
       {/* Scheduled Sessions Timeline */}
@@ -771,8 +722,8 @@ export default function SkillExchange() {
                 />
               </div>
               
-              <button type="submit" className="mt-6 font-pixel text-[10px] w-full flex items-center justify-center gap-2 bg-pastel-cyan text-slate-800 p-3 rounded font-bold hover:bg-pastel-yellow hover:shadow-[0_0_20px_rgba(14,116,144,0.5)] transition-all">
-                🤝 CONFIRM MATCH & SECURE
+              <button type="submit" className="mt-6 font-pixel text-[10px] w-full flex items-center justify-center gap-2 bg-pastel-cyan text-white hover:text-slate-800 p-3 rounded font-bold hover:bg-pastel-yellow hover:shadow-[0_0_20px_rgba(14,116,144,0.5)] transition-all">
+                INVITE
               </button>
             </form>
           </div>

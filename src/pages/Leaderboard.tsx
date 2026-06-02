@@ -8,8 +8,6 @@ export default function Leaderboard() {
   const { user: currentUser } = useGame();
   const [tab, setTab] = useState<TabType>('weekly');
   const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetch('http://localhost:3000/api/users/leaderboard')
       .then(res => res.json())
@@ -18,8 +16,7 @@ export default function Leaderboard() {
           setUsers(data.users);
         }
       })
-      .catch(err => console.error("Failed to fetch leaderboard:", err))
-      .finally(() => setLoading(false));
+      .catch(err => console.error("Failed to fetch leaderboard:", err));
   }, []);
 
   const exists = currentUser ? users.some(u => u.id === currentUser.id) : false;

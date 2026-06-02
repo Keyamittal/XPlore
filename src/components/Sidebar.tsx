@@ -40,8 +40,12 @@ export default function Sidebar() {
             <span className="text-xs select-none">🔥</span>
             <span>{currentUser.streak} DAYS</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shadow-sm text-amber-600 font-pixel text-[9px] font-bold transition-transform hover:scale-105 select-none">
-            <span className="text-xs select-none">🪙</span>
+          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded shadow-sm text-amber-600 font-pixel text-[9px] font-bold transition-transform hover:scale-105 select-none animate-[pulse_3s_infinite_ease-in-out]">
+            <svg className="w-3.5 h-3.5 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
+              <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
+              <circle cx="12" cy="12" r="3" fill="#fef08a" />
+            </svg>
             <span>{gold}G</span>
           </div>
         </div>
