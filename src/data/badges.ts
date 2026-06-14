@@ -39,7 +39,7 @@ export const badges: Badge[] = [
   { id: 'b6', name: 'Wellness Warrior', description: 'Complete 20 Wellness quests.', icon: '💪', unlocked: false, rarity: 'common' },
   { id: 'b7', name: 'Streak Lord', description: 'Hit a 30-day streak.', icon: '👑', unlocked: false, rarity: 'epic' },
   { id: 'b8', name: 'Side Quest Hero', description: 'Complete 10 skill exchange sessions.', icon: '🌟', unlocked: false, rarity: 'epic' },
-  { id: 'b9', name: 'The Centurion', description: 'Complete 100 quests total.', icon: '🛡️', unlocked: false, rarity: 'rare' },
+  { id: 'b9', name: 'The Centurion', description: 'Complete 100 quests total.', icon: '🏅', unlocked: false, rarity: 'rare' },
   { id: 'b10', name: 'Level 25', description: 'Reach the elite level of 25.', icon: '💎', unlocked: false, rarity: 'legendary' },
   { id: 'b11', name: 'Deep Worker', description: 'Complete 15 Deep Work sessions.', icon: '🎯', unlocked: false, rarity: 'rare' },
   { id: 'b12', name: 'Legend of XPLORE', description: 'Reach level 30 and top the leaderboard.', icon: '🏆', unlocked: false, rarity: 'legendary' },

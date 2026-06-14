@@ -71,6 +71,11 @@ export const playSound = (type: 'hover' | 'click' | 'success') => {
     const audioCtx = getAudioContext();
     if (!audioCtx) return;
 
+    // Proactively heal suspended state synchronously inside user interaction callback
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(e => console.warn("Failed to resume context on playSound:", e));
+    }
+
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -167,7 +172,20 @@ const triggerThemeSynth = () => {
 
 export const startMysteriousTheme = () => {
   isThemeRunning = true;
-  triggerThemeSynth();
+  const audioCtx = getAudioContext();
+  
+  // Proactively unlock suspended contexts when entering the run
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume()
+      .then(() => triggerThemeSynth())
+      .catch(err => {
+        console.warn("Could not resume context inside theme start:", err);
+        // Fallback: try triggering anyway
+        triggerThemeSynth();
+      });
+  } else {
+    triggerThemeSynth();
+  }
 };
 
 export const stopMysteriousTheme = () => {

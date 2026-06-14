@@ -5,7 +5,15 @@ import { funChallenges } from '../data/funQuests';
 import confetti from 'canvas-confetti';
 
 export default function Backpack() {
-  const { gold, inventory, buyItem, useItem, unlockedCollectibles } = useGame();
+  const { 
+    gold, 
+    inventory, 
+    buyItem, 
+    useItem, 
+    unlockedCollectibles,
+    buyEgg,
+    pets
+  } = useGame();
   
   useEffect(() => {
     // Start mysterious background merchant music
@@ -17,6 +25,7 @@ export default function Backpack() {
   }, []);
 
   const [activeTab, setActiveTab] = useState<'backpack' | 'shop' | 'collectibles'>('backpack');
+  const [shopSubTab, setShopSubTab] = useState<'consumables' | 'pets'>('consumables');
   const [merchantDialogue, setMerchantDialogue] = useState<string>(
     "Welcome, traveler! Spend your hard-earned gold coins on items to aid your journey."
   );
@@ -45,6 +54,36 @@ export default function Backpack() {
     }
   };
 
+
+
+  const handlePurchaseEgg = (id: string, name: string, price: number, petType: string) => {
+    if (gold < price) {
+      playSound('click');
+      setMerchantDialogue("Hmph! You don't have enough gold coins for that! Complete more quests first.");
+      return;
+    }
+
+    if (pets.some(p => p.type === petType)) {
+      playSound('click');
+      setMerchantDialogue(`You already have a pet companion of type: ${petType.toUpperCase()}. Alistair restricts duplicates!`);
+      return;
+    }
+
+    const success = buyEgg(id);
+    if (success) {
+      playSound('success');
+      setMerchantDialogue(`A pristine egg! The ${name} has been placed in your evolution locker. Hatch it soon!`);
+      confetti({
+        particleCount: 30,
+        spread: 40,
+        colors: ['#FFD54F', '#E0F2FE', '#FDF2F8'],
+        origin: { y: 0.8 }
+      });
+    } else {
+      setMerchantDialogue("Transaction error! Try again later.");
+    }
+  };
+
   const handleUseItem = (id: string) => {
     playSound('click');
     const success = useItem(id);
@@ -60,7 +99,7 @@ export default function Backpack() {
           colors: ['#CE93D8', '#F48FB1', '#FFD54F', '#0E7490']
         });
       } else if (id === 'task_shield') {
-        setUseFeedback(`🛡️ Activated Task Shield! Streak incremented by +1 & protected! (Tip: Task Shields are consumed automatically during Alistair's Run to block defeat!)`);
+        setUseFeedback(`Activated Task Shield! Streak incremented by +1 & protected! (Tip: Task Shields are consumed automatically during Alistair's Run to block defeat!)`);
         confetti({
           particleCount: 30,
           spread: 40,
@@ -256,72 +295,170 @@ export default function Backpack() {
 
       {/* Shop Panel */}
       {activeTab === 'shop' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {inventory.map((item) => {
-            const canAfford = gold >= item.price;
-            return (
-              <section
-                key={item.id}
-                className="p-5 flex flex-col justify-between bg-white hover:-translate-y-1 hover:shadow-md transition-all border-4 border-slate-800"
-                style={{
-                  boxShadow: 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #f0dccf',
-                  borderRadius: 0,
-                  position: 'relative'
-                }}
-              >
-                <div>
-                  {/* Shop Item Header */}
-                  <div className="flex justify-between items-start mb-3 border-b border-slate-100 pb-2">
-                    <span className="font-pixel text-[9px] text-amber-600 font-bold tracking-wider uppercase">
-                      FOR SALE
-                    </span>
-                    <span className="font-pixel text-[10px] bg-[#f0dccf] border border-[#f0dccf] text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1.5">
-                      <svg className="w-3 h-3 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
-                        <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
-                        <circle cx="12" cy="12" r="3" fill="#fef08a" />
-                      </svg>
-                      {item.price}G
-                    </span>
-                  </div>
+        <div className="flex flex-col gap-6 w-full animate-[fade-in_0.25s_ease-out]">
+          {/* Shop Sub-tabs */}
+          <div className="flex gap-2 border-b border-slate-200 pb-2 mb-2 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => { playSound('click'); setShopSubTab('consumables'); }}
+              className={`px-4 py-2.5 font-pixel text-[8.5px] font-bold border-2 border-slate-800 transition-all select-none whitespace-nowrap ${
+                shopSubTab === 'consumables'
+                  ? 'bg-[#f0dccf] text-slate-800 shadow-[2px_2px_0px_#1e293b]'
+                  : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 shadow-none'
+              }`}
+            >
+              CONSUMABLE ITEMS
+            </button>
 
-                  {/* Icon & Info */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-slate-50 border-2 border-slate-800 rounded flex items-center justify-center text-3xl select-none shadow-sm shrink-0">
-                      {item.icon}
-                    </div>
+            <button
+              onClick={() => { playSound('click'); setShopSubTab('pets'); }}
+              className={`px-4 py-2.5 font-pixel text-[8.5px] font-bold border-2 border-slate-800 transition-all select-none whitespace-nowrap ${
+                shopSubTab === 'pets'
+                  ? 'bg-[#f0dccf] text-slate-800 shadow-[2px_2px_0px_#1e293b]'
+                  : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 shadow-none'
+              }`}
+            >
+              COMPANION EGGS
+            </button>
+          </div>
+
+          {/* Consumables List */}
+          {shopSubTab === 'consumables' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {inventory.map((item) => {
+                const canAfford = gold >= item.price;
+                return (
+                  <section
+                    key={item.id}
+                    className="p-5 flex flex-col justify-between bg-white hover:-translate-y-1 hover:shadow-md transition-all border-4 border-slate-800"
+                    style={{
+                      boxShadow: 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #f0dccf',
+                      borderRadius: 0,
+                      position: 'relative'
+                    }}
+                  >
                     <div>
-                      <h3 className="font-bold text-slate-800 text-sm tracking-wide">{item.name}</h3>
-                      <p className="text-slate-500 text-[11px] leading-relaxed mt-1">{item.description}</p>
-                    </div>
-                  </div>
-                </div>
+                      <div className="flex justify-between items-start mb-3 border-b border-slate-100 pb-2">
+                        <span className="font-pixel text-[9px] text-amber-600 font-bold tracking-wider uppercase">
+                          FOR SALE
+                        </span>
+                        <span className="font-pixel text-[10px] bg-[#f0dccf] border border-[#f0dccf] text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1.5">
+                          <svg className="w-3 h-3 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
+                            <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
+                            <circle cx="12" cy="12" r="3" fill="#fef08a" />
+                          </svg>
+                          {item.price}G
+                        </span>
+                      </div>
 
-                {/* Purchase Button */}
-                <button
-                  onClick={() => handlePurchase(item.id, item.name, item.price)}
-                  className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all flex items-center justify-center gap-2 ${
-                    canAfford
-                      ? 'bg-[#f0dccf] text-slate-800 hover:bg-[#cc6d78] hover:text-white hover:translate-y-[-1px] cursor-pointer'
-                      : 'bg-rose-50 text-rose-500 border-rose-300 shadow-none cursor-not-allowed hover:bg-rose-100'
-                  }`}
-                >
-                  {canAfford ? (
-                    <div className="flex items-center justify-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
-                        <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
-                        <circle cx="12" cy="12" r="3" fill="#fef08a" />
-                      </svg>
-                      <span>BUY FOR {item.price} GOLD</span>
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-14 h-14 bg-slate-50 border-2 border-slate-800 rounded flex items-center justify-center text-3xl select-none shadow-sm shrink-0">
+                          {item.icon}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-800 text-sm tracking-wide">{item.name}</h3>
+                          <p className="text-slate-500 text-[11px] leading-relaxed mt-1">{item.description}</p>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    '❌ NOT ENOUGH GOLD'
-                  )}
-                </button>
-              </section>
-            );
-          })}
+
+                    <button
+                      onClick={() => handlePurchase(item.id, item.name, item.price)}
+                      className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all flex items-center justify-center gap-2 ${
+                        canAfford
+                          ? 'bg-[#f0dccf] text-slate-800 hover:bg-[#cc6d78] hover:text-white hover:translate-y-[-1px] cursor-pointer'
+                          : 'bg-rose-50 text-rose-500 border-rose-300 shadow-none cursor-not-allowed hover:bg-rose-100'
+                      }`}
+                    >
+                      {canAfford ? (
+                        `BUY FOR ${item.price} GOLD`
+                      ) : (
+                        '❌ NOT ENOUGH GOLD'
+                      )}
+                    </button>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Companion eggs list */}
+          {shopSubTab === 'pets' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { id: 'cozy_fox', name: 'Cozy Fox Egg', price: 100, petType: 'fox', icon: '🥚', description: 'Hatch to unlock Pippin the Fox, who doubles all coin spawn rates during the Mysterious Run!' },
+                { id: 'wise_owl', name: 'Wise Owl Egg', price: 120, petType: 'owl', icon: '🥚', description: 'Hatch to unlock Ollie the Owl, who grants a passive +10% score bonus in Mysterious Run!' },
+                { id: 'floaty_frog', name: 'Floaty Frog Egg', price: 80, petType: 'frog', icon: '🥚', description: 'Hatch to unlock Bubu the Frog, who lowers jumping gravity by 12% for floatier leaps!' },
+                { id: 'lucky_cat', name: 'Lucky Cat Egg', price: 90, petType: 'cat', icon: '🥚', description: 'Hatch to unlock Cookie the Cat, who grants a passive +12% score bonus in Mysterious Run!' },
+                { id: 'cozy_panda', name: 'Cozy Panda Egg', price: 110, petType: 'panda', icon: '🥚', description: 'Hatch to unlock Bamboo the Panda, who grants a passive +15% score bonus in Mysterious Run!' },
+                { id: 'happy_duck', name: 'Happy Duck Egg', price: 70, petType: 'duck', icon: '🥚', description: 'Hatch to unlock Ducky the Duck, who decreases jumping gravity by 8% for floatier leaps!' },
+                { id: 'starry_dragon', name: 'Starry Dragon Egg', price: 150, petType: 'dragon', icon: '🥚', description: 'Hatch to unlock Drake the Dragon, who slows obstacle scrolling speed by 20%!' },
+                { id: 'mystic_unicorn', name: 'Mystic Unicorn Egg', price: 200, petType: 'unicorn', icon: '🥚', description: 'Hatch to unlock Sparkles the Unicorn, who grants a passive +25% score bonus in Mysterious Run!' },
+                { id: 'sleepy_sloth', name: 'Sleepy Sloth Egg', price: 130, petType: 'sloth', icon: '🥚', description: 'Hatch to unlock Sid the Sloth, who slows obstacle scrolling speed by 20%!' },
+                { id: 'cosmic_phoenix', name: 'Cosmic Phoenix Egg', price: 180, petType: 'phoenix', icon: '🥚', description: 'Hatch to unlock Phoenix the Firebird, who doubles all coin spawn rates during the Mysterious Run!' }
+              ].map((item) => {
+                const canAfford = gold >= item.price;
+                const isOwned = pets.some(p => p.type === item.petType);
+                return (
+                  <section
+                    key={item.id}
+                    className="p-5 flex flex-col justify-between bg-white hover:-translate-y-1 hover:shadow-md transition-all border-4 border-slate-800"
+                    style={{
+                      boxShadow: 'inset -4px -4px 0px rgba(0, 0, 0, 0.05), 4px 4px 0px #f0dccf',
+                      borderRadius: 0,
+                      position: 'relative'
+                    }}
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-3 border-b border-slate-100 pb-2">
+                        <span className="font-pixel text-[9px] text-amber-600 font-bold tracking-wider uppercase">
+                          {isOwned ? 'OWNED COMPANION' : 'FOR SALE'}
+                        </span>
+                        <span className="font-pixel text-[10px] bg-[#f0dccf] border border-[#f0dccf] text-amber-700 px-2 py-0.5 rounded shadow-sm font-bold flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-amber-500 fill-current select-none shrink-0" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="#b45309" strokeWidth="1.5" fill="#fbbf24" />
+                            <circle cx="12" cy="12" r="7" stroke="#d97706" strokeWidth="1" fill="#f59e0b" />
+                            <circle cx="12" cy="12" r="3" fill="#fef08a" />
+                          </svg>
+                          {item.price}G
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-14 h-14 bg-slate-50 border-2 border-slate-800 rounded flex items-center justify-center text-3xl select-none shadow-sm shrink-0">
+                          {item.icon}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-800 text-sm tracking-wide">{item.name}</h3>
+                          <p className="text-slate-500 text-[11px] leading-relaxed mt-1">{item.description}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      disabled={isOwned}
+                      onClick={() => handlePurchaseEgg(item.id, item.name, item.price, item.petType)}
+                      className={`w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] transition-all flex items-center justify-center gap-2 ${
+                        isOwned 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-300 shadow-none cursor-not-allowed'
+                          : canAfford
+                          ? 'bg-[#f0dccf] text-slate-800 hover:bg-[#cc6d78] hover:text-white hover:translate-y-[-1px] cursor-pointer'
+                          : 'bg-rose-50 text-rose-500 border-rose-300 shadow-none cursor-not-allowed hover:bg-rose-100'
+                      }`}
+                    >
+                      {isOwned ? (
+                        '✔️ ALREADY OWNED'
+                      ) : canAfford ? (
+                        `BUY FOR ${item.price} GOLD`
+                      ) : (
+                        '❌ NOT ENOUGH GOLD'
+                      )}
+                    </button>
+                  </section>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

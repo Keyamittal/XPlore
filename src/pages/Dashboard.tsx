@@ -33,7 +33,8 @@ export default function Dashboard() {
     completeMysteryMission,
     shuffleMysteryMission,
     skipMysteryMission,
-    unlockedMysteryBadges
+    unlockedMysteryBadges,
+    setIsGameActive
   } = useGame();
   const navigate = useNavigate();
   
@@ -198,11 +199,13 @@ export default function Dashboard() {
   const startBossBattle = () => {
     playSound('click');
     setIsBattleActive(true);
+    setIsGameActive(true);
   };
 
   const handleRun = () => {
     playSound('click');
     setIsBattleActive(false);
+    setIsGameActive(false);
   };
 
   const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
@@ -446,7 +449,7 @@ export default function Dashboard() {
           )}
         </section>
  
-        <section className="panel-border-yellow p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors flex flex-col justify-between">
+        <section className="panel-border-maroon p-4 relative overflow-hidden bg-white hover:bg-slate-50/50 transition-colors flex flex-col justify-between">
           <div
             onClick={() => { playSound('click'); navigate('/backpack'); }}
             className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2 cursor-pointer group/header hover:border-slate-300 transition-colors relative"

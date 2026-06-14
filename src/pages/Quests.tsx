@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Zap, Clock, CheckCircle } from 'lucide-react';
 import type { QuestCategory } from '../data/quests';
 import { useGame } from '../context/GameContext';
@@ -13,6 +13,12 @@ export default function Quests() {
   const [filter, setFilter] = useState<QuestCategory | 'ALL'>('ALL');
   const [timeLeft, setTimeLeft] = useState<string>('00:00:00');
   const [timePercent, setTimePercent] = useState<number>(0);
+
+  const [verifyingQuest, setVerifyingQuest] = useState<any | null>(null);
+  const [proofText, setProofText] = useState<string>('');
+  const [proofImageName, setProofImageName] = useState<string>('');
+  const [viewingProofQuest, setViewingProofQuest] = useState<any | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -37,9 +43,29 @@ export default function Quests() {
   const completed = quests.filter(q => q.completed).length;
   const totalXP = quests.filter(q => q.completed).reduce((s, q) => s + q.xpReward, 0);
 
-  const handleComplete = async (id: string) => {
-    await completeQuest(id);
+  const handleStartComplete = (quest: any) => {
+    setVerifyingQuest(quest);
+    setProofText('');
+    setProofImageName('');
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofImageName(reader.result as string); // Save Base64 string directly
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!verifyingQuest) return;
+    const id = verifyingQuest.id;
+    await completeQuest(id, proofText || 'Quest marked completed by adventurer.', proofImageName || undefined);
     setPopups(p => ({ ...p, [id]: true }));
+    setVerifyingQuest(null);
     setTimeout(() => setPopups(p => ({ ...p, [id]: false })), 1500);
   };
 
@@ -157,10 +183,18 @@ export default function Quests() {
                     <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-200/50">
                       <span className="flex items-center gap-1 font-pixel text-[8px] text-pastel-purple"><Clock size={11} /> DAILY</span>
                       {quest.completed
-                        ? <span className="flex items-center gap-1 font-pixel text-[8px] text-green-400 bg-green-400/10 border border-green-400 px-2 py-1 rounded shadow-[0_0_5px_#4ade80]"><CheckCircle size={10} /> CLEAR!</span>
+                        ? <div className="flex gap-2 items-center">
+                            <span className="flex items-center gap-1 font-pixel text-[8px] text-green-400 bg-green-400/10 border border-green-400 px-2 py-1 rounded shadow-[0_0_5px_#4ade80]"><CheckCircle size={10} /> CLEAR!</span>
+                            <button
+                              onClick={() => setViewingProofQuest(quest)}
+                              className="font-pixel text-[8px] text-slate-400 hover:text-slate-200 bg-slate-800 border border-slate-700 px-2 py-1 rounded transition-colors"
+                            >
+                              📄 PROOF
+                            </button>
+                          </div>
                         : <button 
                             className="bg-white hover:bg-pastel-pink text-slate-600 hover:text-slate-800 border border-gray-500 hover:border-pastel-pink font-pixel text-[8px] px-3 py-1.5 rounded transition-colors shadow-[0_0_5px_rgba(255,0,255,0)] hover:shadow-[0_0_10px_#ff00ff]"
-                            onClick={() => handleComplete(quest.id)}
+                            onClick={() => handleStartComplete(quest)}
                           >
                             COMPLETE
                           </button>
@@ -173,6 +207,165 @@ export default function Quests() {
           );
         })}
       </div>
+
+      {/* Verification Proof Modal */}
+      {verifyingQuest && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans animate-[fade-in_0.2s_ease-out]">
+          <div className="bg-[#faf7f2] border-4 border-slate-800 p-6 max-w-md w-full shadow-[8px_8px_0px_rgba(0,0,0,0.3)] relative">
+            <h3 className="font-pixel text-[10px] font-bold uppercase mb-2 text-[#cc6d78] tracking-widest">
+              Quest Evidence Submission
+            </h3>
+            <h2 className="text-xl font-extrabold text-slate-800 mb-2 leading-tight tracking-tight font-sans">
+              {verifyingQuest.title}
+            </h2>
+            <p className="text-slate-500 text-xs leading-relaxed mb-4 font-sans font-medium">
+              {verifyingQuest.description}
+            </p>
+
+            <div className="h-[2px] bg-slate-200 w-full mb-4" />
+
+            <label className="block text-slate-700 font-pixel text-[8px] uppercase tracking-wider mb-2">
+              Provide reflection / learnings proof:
+            </label>
+            <textarea
+              required
+              rows={3}
+              value={proofText}
+              onChange={(e) => setProofText(e.target.value)}
+              placeholder="Describe what you did to complete this quest..."
+              className="w-full p-3 bg-white border-2 border-slate-800 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-pastel-pink/55 rounded-lg mb-4 font-sans font-medium leading-relaxed"
+            />
+
+            <label className="block text-slate-700 font-pixel text-[8px] uppercase tracking-wider mb-2">
+              Attach image / document evidence (optional):
+            </label>
+            <input 
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed p-4 text-center cursor-pointer transition-all rounded-lg ${
+                proofImageName 
+                  ? 'bg-emerald-50/70 border-emerald-500 text-emerald-800' 
+                  : 'bg-slate-50 border-slate-300 text-slate-500 hover:bg-slate-100/80 hover:border-slate-850'
+              }`}
+            >
+              {proofImageName ? (
+                <>
+                  <span className="text-2xl block mb-1">✔️</span>
+                  <span className="text-xs font-bold font-sans block text-emerald-700">
+                    Evidence Image Selected!
+                  </span>
+                  <span className="text-[9px] font-sans font-semibold text-emerald-600 mt-1 block">
+                    (Click again to replace file)
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-2xl block mb-1">📷</span>
+                  <span className="text-xs font-bold font-sans block text-slate-600">
+                    Upload Photo or Screenshot Proof
+                  </span>
+                  <span className="text-[9px] font-sans font-semibold text-slate-400 mt-1 block">
+                    (Supports PNG, JPG, or GIF up to 2MB)
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="h-[2px] bg-slate-200 w-full my-4" />
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setVerifyingQuest(null)}
+                className="flex-1 py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold bg-white text-slate-700 hover:bg-slate-100 shadow-[2px_2px_0px_#1e293b] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1e293b] transition-all cursor-pointer text-center"
+              >
+                CANCEL
+              </button>
+              <button
+                disabled={proofText.trim().length < 10}
+                onClick={handleConfirmComplete}
+                className={`flex-1 py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold shadow-[2px_2px_0px_#1e293b] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1e293b] transition-all cursor-pointer text-center ${
+                  proofText.trim().length < 10
+                    ? 'bg-slate-100 text-slate-400 border-slate-300 shadow-none cursor-not-allowed'
+                    : 'bg-[#cc6d78] text-white hover:bg-[#f0dccf] hover:text-slate-800'
+                }`}
+              >
+                SUBMIT EVIDENCE
+              </button>
+            </div>
+            {proofText.trim().length < 10 && (
+              <span className="text-[9px] text-rose-500 font-pixel tracking-wider text-center mt-3 block animate-pulse">
+                * Proof text must be at least 10 characters long.
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* View Quest Evidence Modal */}
+      {viewingProofQuest && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans animate-[fade-in_0.2s_ease-out]">
+          <div className="bg-[#faf7f2] border-4 border-slate-800 p-6 max-w-md w-full shadow-[8px_8px_0px_rgba(0,0,0,0.3)] relative">
+            <h3 className="font-pixel text-[10px] font-bold uppercase mb-2 text-[#cc6d78] tracking-widest">
+              Quest Evidence Log
+            </h3>
+            <h2 className="text-xl font-extrabold text-slate-800 mb-1 leading-tight tracking-tight font-sans">
+              {viewingProofQuest.title}
+            </h2>
+            <div className="flex items-center gap-1.5 mb-4">
+              <span className="bg-emerald-50 border border-emerald-400 text-emerald-800 font-pixel text-[8px] px-2 py-0.5 rounded shadow-[0_0_5px_#4ade80]">
+                ✔️ CLEAR
+              </span>
+              <span className="text-slate-400 text-xs font-pixel text-[8px]">
+                ({viewingProofQuest.category})
+              </span>
+            </div>
+
+            <div className="h-[2px] bg-slate-200 w-full mb-4" />
+
+            <div className="bg-white border-2 border-slate-800 p-4 mb-4 rounded-lg shadow-inner">
+              <span className="block text-slate-400 font-pixel text-[8px] uppercase tracking-wider mb-1">
+                Reflection & Learnings Description:
+              </span>
+              <p className="text-slate-700 text-xs leading-relaxed italic select-text font-sans font-medium">
+                "{viewingProofQuest.proofText || 'Quest marked completed by adventurer.'}"
+              </p>
+            </div>
+
+            {viewingProofQuest.proofImage && (
+              <div className="bg-emerald-50/50 border-2 border-emerald-500 p-3 mb-4 flex flex-col items-center rounded-lg gap-2.5">
+                <div className="flex items-center gap-2 w-full">
+                  <span className="text-xl">📷</span>
+                  <div>
+                    <span className="block text-emerald-850 text-xs font-pixel text-[8.5px] font-bold">
+                      IMAGE EVIDENCE ATTACHED
+                    </span>
+                  </div>
+                </div>
+                <img 
+                  src={viewingProofQuest.proofImage} 
+                  alt="Evidence Attachment" 
+                  className="w-full max-h-48 object-contain border border-slate-300 rounded shadow-sm bg-white"
+                />
+              </div>
+            )}
+
+            <div className="h-[2px] bg-slate-200 w-full my-4" />
+
+            <button
+              onClick={() => setViewingProofQuest(null)}
+              className="w-full py-2.5 border-2 border-slate-800 font-pixel text-[9px] font-bold bg-[#cc6d78] text-white hover:bg-[#f0dccf] hover:text-slate-800 shadow-[2px_2px_0px_#1e293b] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1e293b] transition-all cursor-pointer text-center"
+            >
+              CLOSE EVIDENCE LOG
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

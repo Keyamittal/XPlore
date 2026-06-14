@@ -11,9 +11,11 @@ export interface Quest {
   difficulty: Difficulty;
   completed: boolean;
   icon: string;
+  proofText?: string;
+  proofImage?: string;
 }
 
-// Academic Pool (10 items)
+// Academic Pool (15 items)
 const ACADEMIC_POOL: Omit<Quest, 'completed'>[] = [
   { id: 'ap1', title: 'Attend All Classes', description: 'Show up for every scheduled lecture today.', category: 'Academic', xpReward: 5, difficulty: 2, icon: '🎓' },
   { id: 'ap2', title: 'Submit Your Assignment', description: 'Turn in any pending assignment before the deadline.', category: 'Academic', xpReward: 10, difficulty: 3, icon: '📝' },
@@ -24,10 +26,15 @@ const ACADEMIC_POOL: Omit<Quest, 'completed'>[] = [
   { id: 'ap7', title: 'Library Hermit Quest', description: 'Spend at least 2 hours studying in the quiet zone of the library.', category: 'Academic', xpReward: 10, difficulty: 3, icon: '🏛️' },
   { id: 'ap8', title: 'Engage in Class', description: 'Ask or answer a clarifying question during class or office hours.', category: 'Academic', xpReward: 5, difficulty: 1, icon: '🙋‍♂️' },
   { id: 'ap9', title: 'Draft a 1-Page Summary', description: 'Summarize a textbook chapter or lecture topic into a 1-page guide.', category: 'Academic', xpReward: 5, difficulty: 2, icon: '📁' },
-  { id: 'ap10', title: 'Research Deep Dive', description: 'Read 1 academic paper or research article related to your major.', category: 'Academic', xpReward: 10, difficulty: 3, icon: '🔬' }
+  { id: 'ap10', title: 'Research Deep Dive', description: 'Read 1 academic paper or research article related to your major.', category: 'Academic', xpReward: 10, difficulty: 3, icon: '🔬' },
+  { id: 'ap11', title: 'Flashcard Sprint', description: 'Create 10 new study flashcards for a difficult course.', category: 'Academic', xpReward: 5, difficulty: 2, icon: '🎴' },
+  { id: 'ap12', title: 'Group Study slot', description: 'Organize or participate in a group discussion/study session.', category: 'Academic', xpReward: 10, difficulty: 2, icon: '👥' },
+  { id: 'ap13', title: 'Office Hour Liaison', description: 'Write down 3 clear questions to ask a professor or classmate.', category: 'Academic', xpReward: 5, difficulty: 1, icon: '🙋' },
+  { id: 'ap14', title: 'Project Outline Draft', description: 'Draft a clean abstract or outline for a future research paper.', category: 'Academic', xpReward: 10, difficulty: 3, icon: '📂' },
+  { id: 'ap15', title: 'Concept Map Creator', description: 'Draw a visual concept diagram connecting at least 5 different academic topics.', category: 'Academic', xpReward: 10, difficulty: 2, icon: '🗺️' }
 ];
 
-// Wellness Pool (10 items)
+// Wellness Pool (15 items)
 const WELLNESS_POOL: Omit<Quest, 'completed'>[] = [
   { id: 'wp1', title: 'Drink 8 Glasses of Water', description: 'Stay hydrated throughout the day.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '💧' },
   { id: 'wp2', title: 'Get 7+ Hours of Sleep', description: 'Rest well to perform at your best.', category: 'Wellness', xpReward: 10, difficulty: 3, icon: '😴' },
@@ -38,10 +45,15 @@ const WELLNESS_POOL: Omit<Quest, 'completed'>[] = [
   { id: 'wp7', title: 'Stretch & Posture Check', description: 'Stand up, stretch your back, and adjust your posture once every hour.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '🪑' },
   { id: 'wp8', title: 'IRL Social Connection', description: 'Meet up or call a friend or family member for a genuine conversation.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '❤️' },
   { id: 'wp9', title: 'Soak Up the Sun', description: 'Spend 10 minutes outdoors getting direct morning sunlight.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '☀️' },
-  { id: 'wp10', title: 'Sugar-Free Challenge', description: 'Avoid refined sugars, sodas, and sweet snacks for the entire day.', category: 'Wellness', xpReward: 10, difficulty: 3, icon: '🍎' }
+  { id: 'wp10', title: 'Sugar-Free Challenge', description: 'Avoid refined sugars, sodas, and sweet snacks for the entire day.', category: 'Wellness', xpReward: 10, difficulty: 3, icon: '🍎' },
+  { id: 'wp11', title: 'Green Power Meal', description: 'Consume at least 2 portions of fresh fruits or vegetables today.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '🥦' },
+  { id: 'wp12', title: 'Posture Alignment Check', description: 'Keep your screens at eye level and sit straight during study hours.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '🧍' },
+  { id: 'wp13', title: 'Gratitude Reflection', description: 'Write down 3 things you are genuinely grateful for in your life.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '✍️' },
+  { id: 'wp14', title: '4-7-8 Breathing Rest', description: 'Do the 4-7-8 deep breathing technique for 4 cycles when stressed.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '🌬️' },
+  { id: 'wp15', title: 'Herbal Infusion Drink', description: 'Swap coffee for green tea or warm lemon water to stay hydrated.', category: 'Wellness', xpReward: 5, difficulty: 1, icon: '🍵' }
 ];
 
-// Productivity Pool (10 items)
+// Productivity Pool (15 items)
 const PRODUCTIVITY_POOL: Omit<Quest, 'completed'>[] = [
   { id: 'pp1', title: 'No Social Media Before Noon', description: 'Start your day focused and distraction-free.', category: 'Productivity', xpReward: 10, difficulty: 3, icon: '📵' },
   { id: 'pp2', title: 'Read for 30 Minutes', description: 'Read anything — textbook, novel, article.', category: 'Productivity', xpReward: 5, difficulty: 1, icon: '📚' },
@@ -52,36 +64,26 @@ const PRODUCTIVITY_POOL: Omit<Quest, 'completed'>[] = [
   { id: 'pp7', title: 'Desk Declutter Quest', description: 'Clean and organize your physical study environment completely.', category: 'Productivity', xpReward: 5, difficulty: 1, icon: '🧹' },
   { id: 'pp8', title: 'Learn 3 Efficient Shortcuts', description: 'Learn and use 3 new keyboard shortcuts to boost study speed.', category: 'Productivity', xpReward: 5, difficulty: 1, icon: '⌨' },
   { id: 'pp9', title: 'Weekly Milestone Check', description: 'Define one key goal for this week and write it on a sticky note.', category: 'Productivity', xpReward: 5, difficulty: 1, icon: '🏆' },
-  { id: 'pp10', title: 'Anti-Multitask Block (2 Hours)', description: 'Focus 100% on a single task at a time for 2 full hours.', category: 'Productivity', xpReward: 10, difficulty: 3, icon: '🧱' }
+  { id: 'pp10', title: 'Anti-Multitask Block (2 Hours)', description: 'Focus 100% on a single task at a time for 2 full hours.', category: 'Productivity', xpReward: 10, difficulty: 3, icon: '🧱' },
+  { id: 'pp11', title: '2-Minute Blitz', description: 'Immediately complete any task that takes less than 2 minutes.', category: 'Productivity', xpReward: 5, difficulty: 1, icon: '⚡' },
+  { id: 'pp12', title: 'Tab Cleanout Quest', description: 'Close all open browser tabs except the ones actively needed for study.', category: 'Productivity', xpReward: 5, difficulty: 1, icon: '🌐' },
+  { id: 'pp13', title: '5-Minute Start', description: 'Work on your most procrastinated task for at least 5 minutes straight.', category: 'Productivity', xpReward: 5, difficulty: 2, icon: '⏱️' },
+  { id: 'pp14', title: 'Phone Separation Quest', description: 'Keep your phone in another room or out of sight during work blocks.', category: 'Productivity', xpReward: 10, difficulty: 3, icon: '📴' },
+  { id: 'pp15', title: 'Inbox & Mail Cleanup', description: 'Archive 20 old emails and unsubscribe from 3 newsletters.', category: 'Productivity', xpReward: 10, difficulty: 2, icon: '📨' }
 ];
 
-// Helper to select 4 quests from a category pool based deterministically on the current calendar day
-const selectQuestsForDay = (pool: Omit<Quest, 'completed'>[], day: number): Omit<Quest, 'completed'>[] => {
-  const selected: Omit<Quest, 'completed'>[] = [];
-  const poolSize = pool.length;
-  
-  for (let i = 0; i < 4; i++) {
-    // Generate a rotating starting index based on the day
-    const index = (day + i * 3) % poolSize;
-    const quest = pool[index];
-    
-    // Avoid title duplication
-    if (selected.some(q => q.title === quest.title)) {
-      selected.push(pool[(index + 1) % poolSize]);
-    } else {
-      selected.push(quest);
-    }
-  }
-  return selected;
+// Helper to select 4 quests from a category pool randomly
+const selectQuestsForDay = (pool: Omit<Quest, 'completed'>[]): Omit<Quest, 'completed'>[] => {
+  // Shuffle randomly and select 4 items
+  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 4);
 };
 
 // Main generator returning 12 dynamic daily quests (4 Academic, 4 Wellness, 4 Productivity) with q1-q12 IDs
 export const getDailyQuests = (): Quest[] => {
-  const day = new Date().getDate(); // Day of month: 1 to 31
-  
-  const selectedAcademic = selectQuestsForDay(ACADEMIC_POOL, day);
-  const selectedWellness = selectQuestsForDay(WELLNESS_POOL, day);
-  const selectedProductivity = selectQuestsForDay(PRODUCTIVITY_POOL, day);
+  const selectedAcademic = selectQuestsForDay(ACADEMIC_POOL);
+  const selectedWellness = selectQuestsForDay(WELLNESS_POOL);
+  const selectedProductivity = selectQuestsForDay(PRODUCTIVITY_POOL);
   
   // Combine and map into full Quests with q1-q12 IDs
   return [...selectedAcademic, ...selectedWellness, ...selectedProductivity].map((q, index) => ({

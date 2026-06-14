@@ -49,8 +49,8 @@ export default function Leaderboard() {
 
   // Tailwind heights for the podium blocks: 1st=tallest, 2nd=mid, 3rd=shortest.
   const podiumHeights = ['h-24', 'h-32', 'h-16'];
-  const podiumColors = ['border-gray-400 text-slate-500', 'border-yellow-400 text-yellow-400', 'border-orange-500 text-orange-500'];
-  const podiumBg = ['bg-gray-400', 'bg-yellow-400', 'bg-orange-500'];
+  const podiumColors = ['border-red-500 text-red-500', 'border-yellow-400 text-yellow-400', 'border-orange-500 text-orange-500'];
+  const podiumBg = ['bg-red-500', 'bg-yellow-400', 'bg-orange-500'];
 
   return (
     <div className="flex flex-col gap-6 animate-[fade-in_0.3s_ease-out]">

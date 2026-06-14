@@ -19,16 +19,7 @@ const rarityBorder: Record<string, string> = {
   legendary: '#C4962A',
 };
 
-const generateHeatmap = () =>
-  Array.from({ length: 84 }, () => Math.floor(Math.random() * 5));
-const heatmapData = generateHeatmap();
-const heatColors = [
-  'var(--color-surface-3)',
-  'rgba(74,51,96,0.5)',
-  'rgba(74,51,96,0.8)',
-  'rgba(196,93,106,0.55)',
-  'rgba(196,93,106,0.9)',
-];
+
 
 const customTitles = [
   { name: 'Chaos Goblin', rarity: 'epic', description: 'Unlock this title by completing the Text "We need to talk" Mystery Mission.' },
@@ -43,7 +34,6 @@ const customTitles = [
 
 export default function Profile() {
   const { user: currentUser, logout, unlockedTitles, activeTitle, equipTitle, unlockedMysteryBadges, quests } = useGame();
-  const xpPercent = Math.round((currentUser.xp / currentUser.xpToNext) * 100);
 
   const [skillsCount, setSkillsCount] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
@@ -122,19 +112,7 @@ export default function Profile() {
           <p className="text-pastel-cyan font-semibold mb-1">◈ {currentUser.title}</p>
           <p className="text-xs text-slate-500 font-pixel text-[8px] mb-4">ADVENTURER SINCE {currentUser.joinDate.toUpperCase()}</p>
           
-          {/* HP Bar equivalent */}
-          <div className="w-full max-w-[420px] mx-auto md:mx-0">
-            <div className="flex justify-between font-pixel text-[10px] mb-2">
-              <span className="text-pastel-pink">EXP</span>
-              <span className="text-slate-600">{currentUser.xp}/{currentUser.xpToNext} — {xpPercent}%</span>
-            </div>
-            <div className="w-full h-4 bg-white border border-slate-800 p-0.5 rounded shadow-[inset_0_0_5px_rgba(0,0,0,1)]">
-              <div 
-                className="h-full bg-pastel-pink bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] rounded-sm transition-all duration-1000 shadow-[0_0_10px_#ff00ff]" 
-                style={{ width: `${xpPercent}%` }} 
-              />
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -277,30 +255,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Activity Heatmap */}
-      <div className="flex flex-col gap-4 mt-4">
-        <h3 className="font-pixel text-sm text-slate-800 border-b border-slate-800 pb-2">ACTIVITY LOG</h3>
-        <div className="panel-border-purple p-6 shadow-[0_0_15px_#b026ff_inset] bg-white border-2 border-pastel-purple/50">
-          <p className="font-pixel text-[8px] text-slate-500 mb-4">LAST 12 WEEKS</p>
-          <div className="grid grid-rows-7 grid-flow-col gap-1 w-full overflow-x-auto pb-2">
-            {heatmapData.map((v, i) => (
-              <div
-                key={i}
-                className="w-3 h-3 md:w-4 md:h-4 rounded-sm border border-black/20 hover:scale-125 hover:border-white transition-all cursor-pointer"
-                style={{ background: heatColors[v] }}
-                title={`${v} quests completed`}
-              />
-            ))}
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-4 font-pixel text-[8px] text-slate-500">
-            <span>LESS</span>
-            {heatColors.map((c, i) => (
-              <div key={i} className="w-3 h-3 rounded-sm" style={{ background: c }} />
-            ))}
-            <span>MORE</span>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }

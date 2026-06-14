@@ -8,7 +8,7 @@ interface AlistairRunnerProps {
 }
 
 export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
-  const { inventory, useItem, addXpDirectly, addGoldDirectly } = useGame();
+  const { inventory, useItem, addXpDirectly, addGoldDirectly, pets, activePetId } = useGame();
   
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameState, setGameState] = useState<'idle' | 'running' | 'gameover' | 'victory' | 'victory_sequence'>('idle');
@@ -78,8 +78,50 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
     platformTimer: 0,
     victoryTimer: 0,
     sanctuaryX: 800,
-    wizardVictoryX: 120
+    wizardVictoryX: 120,
+    activePetIcon: null as string | null,
+    hasActiveFox: false,
+    hasActiveOwl: false,
+    hasActiveFrog: false,
+    hasActiveCat: false,
+    hasActivePanda: false,
+    hasActiveDuck: false,
+    hasActiveDragon: false,
+    hasActiveUnicorn: false,
+    hasActiveSloth: false,
+    hasActivePhoenix: false
   });
+
+  const triggerJump = () => {
+    const state = stateRef.current;
+    if (state.gameState !== 'running') return;
+    if (!state.wizard.isJumping && !state.wizard.isSliding) {
+      state.wizard.vy = -12; // Jump force
+      state.wizard.isJumping = true;
+      playSound('click');
+    }
+  };
+
+  const triggerSlide = () => {
+    const state = stateRef.current;
+    if (state.gameState !== 'running') return;
+    if (!state.wizard.isJumping && !state.wizard.isSliding) {
+      state.wizard.isSliding = true;
+      state.wizard.slideTimer = 35; // Duration of slide in frames
+      state.wizard.height = 20; // Hitbox shrinks
+      playSound('click');
+    }
+  };
+
+  const handleJumpTouch = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    triggerJump();
+  };
+
+  const handleSlideTouch = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    triggerSlide();
+  };
 
   // Manage mysterious synthesizer background music theme lifecycle
   useEffect(() => {
@@ -92,26 +134,16 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
   // Handle keyboard inputs
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const state = stateRef.current;
       if (stateRef.current.gameState !== 'running') return;
 
       if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
         e.preventDefault();
-        if (!state.wizard.isJumping && !state.wizard.isSliding) {
-          state.wizard.vy = -12; // Jump force
-          state.wizard.isJumping = true;
-          playSound('click');
-        }
+        triggerJump();
       }
 
       if (e.code === 'ArrowDown' || e.code === 'KeyS') {
         e.preventDefault();
-        if (!state.wizard.isJumping && !state.wizard.isSliding) {
-          state.wizard.isSliding = true;
-          state.wizard.slideTimer = 35; // Duration of slide in frames
-          state.wizard.height = 20; // Hitbox shrinks
-          playSound('click');
-        }
+        triggerSlide();
       }
     };
 
@@ -151,9 +183,28 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
     state.invincibilityFrames = 0;
     state.activeItemNotice = '';
 
+    // Read active pet
+    const activePet = pets.find(p => p.id === activePetId);
+    state.activePetIcon = activePet && activePet.stage !== 'egg' ? activePet.icon : null;
+    state.hasActiveFox = !!(activePet && activePet.type === 'fox' && activePet.stage !== 'egg');
+    state.hasActiveOwl = !!(activePet && activePet.type === 'owl' && activePet.stage !== 'egg');
+    state.hasActiveFrog = !!(activePet && activePet.type === 'frog' && activePet.stage !== 'egg');
+    state.hasActiveCat = !!(activePet && activePet.type === 'cat' && activePet.stage !== 'egg');
+    state.hasActivePanda = !!(activePet && activePet.type === 'panda' && activePet.stage !== 'egg');
+    state.hasActiveDuck = !!(activePet && activePet.type === 'duck' && activePet.stage !== 'egg');
+    state.hasActiveDragon = !!(activePet && activePet.type === 'dragon' && activePet.stage !== 'egg');
+    state.hasActiveUnicorn = !!(activePet && activePet.type === 'unicorn' && activePet.stage !== 'egg');
+    state.hasActiveSloth = !!(activePet && activePet.type === 'sloth' && activePet.stage !== 'egg');
+    state.hasActivePhoenix = !!(activePet && activePet.type === 'phoenix' && activePet.stage !== 'egg');
+
     // Apply item physics modifications
-    state.gravity = state.hasElixirMight ? 0.51 : 0.6; // 15% lower gravity
-    state.speed = state.hasBossKey ? 4 : 5; // Start constant speed based on Chronometer Key status
+    let baseGravity = 0.6;
+    if (state.hasElixirMight) baseGravity *= 0.85; // 15% lower gravity
+    if (state.hasActiveFrog) baseGravity *= 0.88; // 12% lower gravity from frog companion
+    if (state.hasActiveDuck) baseGravity *= 0.92; // 8% lower gravity from duck companion
+    state.gravity = baseGravity;
+
+    state.speed = (state.hasBossKey || state.hasActiveDragon || state.hasActiveSloth) ? 4 : 5; // Start constant speed based on Chronometer Key, active dragon, or sloth status
 
     state.wizard.y = state.groundY - state.wizard.height;
     state.wizard.vy = 0;
@@ -236,9 +287,28 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
     state.invincibilityFrames = 0;
     state.activeItemNotice = '';
 
+    // Read active pet
+    const activePet = pets.find(p => p.id === activePetId);
+    state.activePetIcon = activePet && activePet.stage !== 'egg' ? activePet.icon : null;
+    state.hasActiveFox = !!(activePet && activePet.type === 'fox' && activePet.stage !== 'egg');
+    state.hasActiveOwl = !!(activePet && activePet.type === 'owl' && activePet.stage !== 'egg');
+    state.hasActiveFrog = !!(activePet && activePet.type === 'frog' && activePet.stage !== 'egg');
+    state.hasActiveCat = !!(activePet && activePet.type === 'cat' && activePet.stage !== 'egg');
+    state.hasActivePanda = !!(activePet && activePet.type === 'panda' && activePet.stage !== 'egg');
+    state.hasActiveDuck = !!(activePet && activePet.type === 'duck' && activePet.stage !== 'egg');
+    state.hasActiveDragon = !!(activePet && activePet.type === 'dragon' && activePet.stage !== 'egg');
+    state.hasActiveUnicorn = !!(activePet && activePet.type === 'unicorn' && activePet.stage !== 'egg');
+    state.hasActiveSloth = !!(activePet && activePet.type === 'sloth' && activePet.stage !== 'egg');
+    state.hasActivePhoenix = !!(activePet && activePet.type === 'phoenix' && activePet.stage !== 'egg');
+
     // Apply item physics modifications
-    state.gravity = state.hasElixirMight ? 0.51 : 0.6; // 15% lower gravity
-    state.speed = state.hasBossKey ? 4 : 5;
+    let baseGravity = 0.6;
+    if (state.hasElixirMight) baseGravity *= 0.85; // 15% lower gravity
+    if (state.hasActiveFrog) baseGravity *= 0.88; // 12% lower gravity from frog companion
+    if (state.hasActiveDuck) baseGravity *= 0.92; // 8% lower gravity from duck companion
+    state.gravity = baseGravity;
+
+    state.speed = (state.hasBossKey || state.hasActiveDragon || state.hasActiveSloth) ? 4 : 5;
 
     state.wizard.y = state.groundY - state.wizard.height;
     state.wizard.vy = 0;
@@ -1364,9 +1434,9 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
           ctx.textAlign = 'center';
           ctx.fillStyle = '#db2777'; // pink
           ctx.font = '7px "Press Start 2P", monospace';
-          ctx.fillText("THE SANCTUARY DEN", sX + 30, gY - 82);
+          ctx.fillText("THE SANCTUARY DEN", sX + 30, gY - 110);
           ctx.fillStyle = '#d97706'; // gold
-          ctx.fillText('✨ BEWARE WITCHES ✨', sX + 30, gY - 70);
+          ctx.fillText('✨ BEWARE WITCHES ✨', sX + 30, gY - 96);
 
           ctx.restore();
         }
@@ -2794,12 +2864,17 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
 
         // Apply score boost if has XP Booster (only when running)
         if (state.gameState === 'running') {
-          const scoreIncrement = state.hasXpBooster ? 1.25 : 1;
-          state.score += scoreIncrement;
+          let scoreMult = 1.0;
+          if (state.hasXpBooster) scoreMult += 0.25;
+          if (state.hasActiveOwl) scoreMult += 0.10; // +10% passive score bonus
+          if (state.hasActiveCat) scoreMult += 0.12; // +12% passive score bonus
+          if (state.hasActivePanda) scoreMult += 0.15; // +15% passive score bonus
+          if (state.hasActiveUnicorn) scoreMult += 0.25; // +25% passive score bonus
+          state.score += scoreMult;
         }
         
         // Speed is constant as requested (no dynamic speed scaling with distance score!)
-        state.speed = state.hasBossKey ? 4 : 5;
+        state.speed = (state.hasBossKey || state.hasActiveDragon || state.hasActiveSloth) ? 4 : 5;
 
         // Apply gravity to player
         state.wizard.y += state.wizard.vy;
@@ -2910,7 +2985,10 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
               icon: '🪙'
             });
             const baseCoinTimer = Math.random() * 50 + 40;
-            state.coinTimer = state.hasLuckyCharm ? baseCoinTimer / 2 : baseCoinTimer;
+            let divisor = 1;
+            if (state.hasLuckyCharm) divisor *= 2;
+            if (state.hasActiveFox || state.hasActivePhoenix) divisor *= 2;
+            state.coinTimer = baseCoinTimer / divisor;
           }
 
           // Spawn platforms
@@ -3066,7 +3144,7 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
               state.hasUsedShieldThisRun = true;
               useItem('task_shield');
               state.invincibilityFrames = 90; // invulnerable for 1.5 seconds (90 frames)
-              state.activeItemNotice = '🛡️ Shield Consumed! Invincible!';
+              state.activeItemNotice = 'Shield Consumed! Invincible!';
               playSound('success');
               
               setTimeout(() => {
@@ -3157,6 +3235,11 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
             state.sanctuaryX = 520; // Fixed stationary Gate position
             state.wizardVictoryX = 120; // Alistair starts at X = 120
             playSound('success');
+
+            // Clear active game elements from the screen for a clean cutscene
+            state.obstacles = [];
+            state.collectibles = [];
+            state.platforms = [];
           } else {
             // Reached 15000m: Absolute ascended victory!
             state.gameState = 'victory';
@@ -3280,6 +3363,18 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
       }
       ctx.globalAlpha = alistairAlpha;
 
+      // Draw active companion pet floating behind Alistair with smooth sinusoidal bobbing animation
+      if (state.activePetIcon) {
+        ctx.save();
+        ctx.globalAlpha = alistairAlpha;
+        ctx.font = '20px serif';
+        const bobOffset = Math.sin(Date.now() / 150) * 4;
+        const petX = currentWizardX - 22;
+        const petY = state.wizard.y + (state.wizard.isSliding ? 5 : 10) + bobOffset;
+        ctx.fillText(state.activePetIcon, petX, petY);
+        ctx.restore();
+      }
+
       drawWizardCharacter(
         ctx,
         currentWizardX,
@@ -3340,7 +3435,7 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
       }
       ctx.font = '8px "Press Start 2P", monospace, Courier';
       ctx.textAlign = 'left';
-      ctx.fillText(`SCORE: ${state.score}m`, 30, 30);
+      ctx.fillText(`SCORE: ${state.score}m`, 20, 25);
 
       // Draw Level Number in top-right corner of HUD
       ctx.textAlign = 'right';
@@ -3354,68 +3449,57 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
         state.level === 'aurora_glow' ? 4 :
         state.level === 'neon_grid' ? 3 :
         state.level === 'sanctuary' ? 2 : 1
-      }`, 770, 30);
+      }`, 780, 25);
       
+      // Reset text align to left for the rest of the HUD elements so they are correctly left-aligned
+      ctx.textAlign = 'left';
+
       // Kept gold coin tag in both levels for absolute clarity and understanding
       ctx.fillStyle = '#fbbf24'; 
-      ctx.fillText('COINS:', 30, 48);
-      
-      // Draw a small inline custom vector gold coin on HUD instead of silver emoji on Mac
-      ctx.save();
-      ctx.fillStyle = '#fbbf24'; // rich bright gold
-      ctx.strokeStyle = '#d97706'; // amber border
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(88, 44, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillText(`${state.coins}`, 98, 48);
+      ctx.fillText(`COINS: ${state.coins}`, 20, 40);
       
       if (state.level === 'forest') {
         ctx.fillStyle = '#0891b2'; // Cyan level tag
-        ctx.fillText('LEVEL 1: WILDERNESS', 30, 66);
+        ctx.fillText('LEVEL 1: WILDERNESS', 20, 55);
       } else if (state.level === 'sanctuary') {
         ctx.fillStyle = '#c084fc'; // Purple level tag
-        ctx.fillText('LEVEL 2: SANCTUARY', 30, 66);
+        ctx.fillText('LEVEL 2: SANCTUARY', 20, 55);
       } else if (state.level === 'neon_grid') {
         ctx.fillStyle = '#f43f5e'; // Pink level tag
-        ctx.fillText('LEVEL 3: NEON GRID', 30, 66);
+        ctx.fillText('LEVEL 3: NEON GRID', 20, 55);
       } else if (state.level === 'aurora_glow') {
         ctx.fillStyle = '#14b8a6'; // Teal level tag
-        ctx.fillText('LEVEL 4: AURORA GLOW', 30, 66);
+        ctx.fillText('LEVEL 4: AURORA GLOW', 20, 55);
       } else if (state.level === 'cosmic_dawn') {
         ctx.fillStyle = '#fbbf24'; // Gold level tag
-        ctx.fillText('LEVEL 5: COSMIC SPACE', 30, 66);
+        ctx.fillText('LEVEL 5: COSMIC SPACE', 20, 55);
       } else if (state.level === 'arcade') {
         ctx.fillStyle = '#ec4899'; // Pink level tag
-        ctx.fillText('LEVEL 6: RETRO ARCADE', 30, 66);
+        ctx.fillText('LEVEL 6: RETRO ARCADE', 20, 55);
       } else if (state.level === 'playground') {
         ctx.fillStyle = '#22c55e'; // Green level tag
-        ctx.fillText('LEVEL 7: PLAYGROUND', 30, 66);
+        ctx.fillText('LEVEL 7: PLAYGROUND', 20, 55);
       } else if (state.level === 'museum') {
         ctx.fillStyle = '#cbd5e1'; // Silver level tag
-        ctx.fillText('LEVEL 8: GRAND MUSEUM', 30, 66);
+        ctx.fillText('LEVEL 8: GRAND MUSEUM', 20, 55);
       } else if (state.level === 'water') {
         ctx.fillStyle = '#06b6d4'; // Cyan level tag
-        ctx.fillText('LEVEL 9: DEEP OCEAN', 30, 66);
+        ctx.fillText('LEVEL 9: DEEP OCEAN', 20, 55);
       } else if (state.level === 'volcano') {
         ctx.fillStyle = '#ef4444'; // Red level tag
-        ctx.fillText('LEVEL 10: VOLCANIC CRATER', 30, 66);
+        ctx.fillText('LEVEL 10: VOLCANIC CRATER', 20, 55);
       }
       ctx.restore();
 
       // Draw active backpack item status badges in standard retro grid font
-      let buffX = 30;
-      let buffY = 82;
+      let buffX = 20;
+      let buffY = 70;
       ctx.save();
       ctx.font = '7px "Press Start 2P", monospace';
       
       if (state.hasXpBooster) {
         ctx.fillStyle = '#7c3aed'; // High contrast violet
-        ctx.fillText('⚡ XP BOOS', buffX, buffY);
+        ctx.fillText('⚡ XP BOOST', buffX, buffY);
         buffY += 12;
       }
       if (state.hasBossKey) {
@@ -3553,6 +3637,9 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
       state.victoryTimer = 0;
       state.sanctuaryX = 520; // Static location
       state.wizardVictoryX = 460; // instantly close to entrance for quick dev skip!
+      state.obstacles = [];
+      state.collectibles = [];
+      state.platforms = [];
     } else {
       // Reached final volcano: Complete victory!
       state.gameState = 'victory';
@@ -3574,9 +3661,9 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-slate-950 text-white z-50 font-pixel overflow-hidden">
-      {/* 1. Header overlay bar at the top */}
-      <div className="absolute top-0 left-0 w-full z-20 bg-slate-950/65 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-slate-800/40 select-none">
+    <div className="fixed inset-0 w-screen h-screen bg-slate-950 text-white z-50 font-pixel overflow-hidden flex flex-col justify-between">
+      {/* 1. Header bar at the top */}
+      <div className="w-full z-20 bg-slate-950 px-6 py-4 flex justify-between items-center border-b border-slate-800/40 select-none shrink-0">
         <span className="text-pastel-purple font-bold tracking-wider text-xs md:text-sm flex items-center gap-2">
           <span className="pixel-star animate-pulse"></span>
           ALISTAIR'S MYSTERIOUS RUN
@@ -3605,16 +3692,16 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
         </button>
       </div>
 
-      {/* 2. Full-Screen Canvas container spanning corner to corner */}
-      <div className="w-full h-full relative bg-[#bae6fd] flex items-center justify-center z-0">
+      {/* 2. Responsive Game Screen Wrapper (covers remaining screen height) */}
+      <div className="flex-1 w-full relative bg-slate-950 overflow-hidden">
         <canvas 
           ref={canvasRef} 
           width={800} 
           height={400} 
-          className="block w-full h-full object-cover absolute inset-0"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 max-w-full max-h-full aspect-[2/1] block"
         />
 
-        {/* Dynamic gameover/victory overlay screens on top of full-screen background canvas */}
+        {/* Dynamic gameover/victory overlay screens on top of background canvas */}
         {gameState === 'idle' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/65 select-none z-10 p-4">
             <button 
@@ -3656,7 +3743,6 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
 
         {gameState === 'gameover' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-center select-none p-4 z-10 animate-[fade-in_0.25s_ease-out]">
-            <span className="text-4xl mb-2 animate-bounce">💀</span>
             <h2 className="text-[#ef4444] text-sm font-pixel font-bold tracking-widest uppercase mb-1">RUN FAILED</h2>
             <p className="text-[10px] text-slate-400 max-w-xs mb-6 leading-normal">
               You hit an obstacle! Distance reached: <strong className="text-slate-200">{score}m</strong>. Coins collected: <strong className="text-amber-400 inline-flex items-center gap-1 align-middle">
@@ -3708,10 +3794,28 @@ export default function AlistairRunner({ onClose }: AlistairRunnerProps) {
             </div>
           </div>
         )}
+
+        {/* Mobile Tactile Arcade Buttons (Overlaid on bottom side corners above footer) */}
+        <div className="md:hidden absolute bottom-6 left-0 w-full flex gap-4 justify-between px-6 z-30 pointer-events-none">
+          <button
+            onTouchStart={handleSlideTouch}
+            onMouseDown={handleSlideTouch}
+            className="w-20 h-20 bg-pastel-pink/90 hover:bg-[#b05d67] text-white rounded-full font-pixel font-bold text-[9px] uppercase tracking-wider border-4 border-slate-800 shadow-lg active:scale-95 transition-all select-none touch-none text-center cursor-pointer pointer-events-auto flex items-center justify-center"
+          >
+            SLIDE
+          </button>
+          <button
+            onTouchStart={handleJumpTouch}
+            onMouseDown={handleJumpTouch}
+            className="w-20 h-20 bg-pastel-green/90 hover:bg-[#6ab36e] text-slate-800 rounded-full font-pixel font-bold text-[9px] uppercase tracking-wider border-4 border-slate-800 shadow-lg active:scale-95 transition-all select-none touch-none text-center cursor-pointer pointer-events-auto flex items-center justify-center"
+          >
+            JUMP
+          </button>
+        </div>
       </div>
 
-      {/* 3. Footer controls instruction bar at the bottom */}
-      <div className="absolute bottom-0 left-0 w-full z-20 bg-slate-950/65 backdrop-blur-md px-6 py-4 flex justify-between items-center border-t border-slate-800/40 text-[9px] text-slate-400 select-none">
+      {/* 3. Footer instructions bar at the bottom */}
+      <div className="w-full z-20 bg-slate-950 px-6 py-4 flex justify-between items-center border-t border-slate-800/40 text-[9px] text-slate-400 select-none shrink-0">
         <div className="flex gap-6">
           <div>JUMP: <strong className="text-pastel-cyan">W / UP Arrow / Space</strong></div>
           <div>SLIDE: <strong className="text-pastel-pink">S / DOWN Arrow</strong></div>

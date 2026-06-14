@@ -43,8 +43,8 @@ export default function Login() {
   // Auth Form State
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('AryanK');
-  const [password, setPassword] = useState('hackathon2026');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -95,7 +95,7 @@ export default function Login() {
       });
 
       playSound('success');
-      login(data.user, data.token);
+      login(data.user, data.token, data.streakMissed, data.oldStreak);
       navigate('/');
     } catch (err: any) {
       setError(err.message);
@@ -544,7 +544,7 @@ export default function Login() {
               <div className="w-full bg-slate-100/50 border border-slate-200/40 p-1 rounded-xl flex gap-1 mb-4 sm:mb-5">
                 <button 
                   type="button"
-                  onClick={() => { playSound('click'); setIsSignUp(false); setError(''); setUsername('AryanK'); setPassword('hackathon2026'); }}
+                  onClick={() => { playSound('click'); setIsSignUp(false); setError(''); setUsername(''); setPassword(''); }}
                   className={`flex-1 py-2 text-xs font-bold font-inter rounded-lg transition-all ${!isSignUp ? 'bg-white text-black shadow-sm border border-slate-100' : 'text-black/60 hover:text-black'}`}
                 >
                   SIGN IN
@@ -590,7 +590,7 @@ export default function Login() {
                       value={username}
                       onChange={e => setUsername(e.target.value)}
                       className="w-full bg-white/70 border border-slate-200 text-black rounded-xl pl-10 pr-4 py-3 font-semibold focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all text-sm placeholder:text-black/50 placeholder:font-normal"
-                      placeholder={isSignUp ? "Create a unique tag" : "AryanK"}
+                      placeholder={isSignUp ? "Create a unique tag" : "Enter username"}
                       required
                     />
                   </div>
