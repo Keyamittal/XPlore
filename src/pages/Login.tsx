@@ -98,7 +98,11 @@ export default function Login() {
       login(data.user, data.token, data.streakMissed, data.oldStreak);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      if (err.message === 'Load failed' || err.message === 'Failed to fetch') {
+        setError('Unable to connect to the backend server. Please make sure the backend is running on port 3000 (run `npm run server`).');
+      } else {
+        setError(err.message || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }
